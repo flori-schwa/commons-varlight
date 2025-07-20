@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.persistence.nls;
 
-import lombok.Getter;
 import me.shawlaf.varlight.persistence.IChunkCustomLightAccess;
 import me.shawlaf.varlight.persistence.IRegionCustomLightAccess;
 import me.shawlaf.varlight.persistence.nls.common.NLSConstants;
@@ -28,7 +27,6 @@ public class NLSFile implements IRegionCustomLightAccess {
 
     public final File file;
 
-    @Getter
     private final int regionX, regionZ;
     private final boolean deflate;
 
@@ -134,6 +132,14 @@ public class NLSFile implements IRegionCustomLightAccess {
 
     public RegionCoords getRegionCoords() {
         return new RegionCoords(regionX, regionZ);
+    }
+
+    public int getRegionX() {
+        return regionX;
+    }
+
+    public int getRegionZ() {
+        return regionZ;
     }
 
     @Override

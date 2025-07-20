@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.persistence.nls.implementations.v1;
 
-import lombok.Getter;
 import me.shawlaf.varlight.persistence.IChunkCustomLightAccess;
 import me.shawlaf.varlight.persistence.nls.common.ChunkSectionNibbleArray;
 import me.shawlaf.varlight.persistence.nls.common.NibbleArray;
@@ -15,7 +14,6 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     private static final int SECTION_SIZE = 16 * 16 * 16;
 
-    @Getter
     private final ChunkCoords chunkPosition;
 
     final ChunkSectionNibbleArray[] lightData = new ChunkSectionNibbleArray[16];
@@ -26,6 +24,11 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     public ChunkLightStorage_V1(int x, int z) {
         this(new ChunkCoords(x, z));
+    }
+
+    @Override
+    public ChunkCoords getChunkPosition() {
+        return chunkPosition;
     }
 
     public int getCustomLuminance(IntPosition position) {

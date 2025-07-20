@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.util.io;
 
-import lombok.experimental.UtilityClass;
 import me.shawlaf.varlight.util.pos.RegionCoords;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,8 +10,11 @@ import java.util.zip.GZIPInputStream;
 
 import static java.lang.Integer.parseInt;
 
-@UtilityClass
-public class FileUtil {
+public final class FileUtil {
+
+    private FileUtil() {
+
+    }
 
     private static final Pattern FILENAME_PATTERN = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\..+$");
 

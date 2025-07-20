@@ -62,6 +62,22 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
         return IteratorUtils.collectFromIterator(iterateChunks(), Collectors.toSet());
     }
 
+    /**
+     * @return The amount of chunks covered by this {@link RegionIterator}
+     */
+    public long getAffectedChunksCount() {
+        final int xStart = start.getChunkX();
+        final int zStart = start.getChunkZ();
+
+        final int xEnd = end.getChunkX();
+        final int zEnd = end.getChunkZ();
+
+        final int xLength = Math.abs(xStart < xEnd ? xEnd - xStart : xStart - xEnd);
+        final int zLength = Math.abs(zStart < zEnd ? zEnd - zStart : zStart - zEnd);
+
+        return Math.multiplyFull(xLength, zLength);
+    }
+
     public ChunkIterator iterateChunks() {
         return new ChunkIterator(start.toChunkCoords(), end.toChunkCoords());
     }

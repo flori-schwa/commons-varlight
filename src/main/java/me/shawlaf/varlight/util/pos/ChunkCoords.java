@@ -4,6 +4,7 @@ import me.shawlaf.varlight.util.*;
 
 import java.util.Objects;
 
+// TODO Convert to record
 public class ChunkCoords {
 
     public static final ChunkCoords ORIGIN = new ChunkCoords(0, 0);

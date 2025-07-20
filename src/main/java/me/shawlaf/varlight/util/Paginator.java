@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.util;
 
-import lombok.experimental.UtilityClass;
 import me.shawlaf.varlight.util.collections.CountingIterator;
 
 import java.util.ArrayList;
@@ -8,8 +7,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-@UtilityClass
-public class Paginator {
+public final class Paginator {
+
+    private Paginator() {
+
+    }
 
     public static int getAmountPages(Collection<?> all, int pageSize) {
         return getAmountPages(all.size(), pageSize);

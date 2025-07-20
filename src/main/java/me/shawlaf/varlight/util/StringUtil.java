@@ -1,14 +1,16 @@
 package me.shawlaf.varlight.util;
 
-import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-@UtilityClass
-public class StringUtil {
+public final class StringUtil {
 
-    public @NotNull String repeat(@NotNull String x, int times) {
+    private StringUtil() {
+
+    }
+
+    public static @NotNull String repeat(@NotNull String x, int times) {
         if (times < 0) {
             throw new IllegalArgumentException("times must be >= 0, got: " + times);
         }

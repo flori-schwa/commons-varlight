@@ -1,18 +1,15 @@
 package me.shawlaf.varlight.persistence.old;
 
-import lombok.Getter;
 import me.shawlaf.varlight.util.pos.IntPosition;
 
 import java.util.Objects;
 
 @Deprecated
 public class BasicCustomLightSource implements ICustomLightSource {
-    @Getter
+
     private final IntPosition position;
-    @Getter
     private final String type;
     private final int emittingLight;
-    @Getter
     private final boolean migrated;
 
     public BasicCustomLightSource(IntPosition position, int emittingLight, boolean migrated, String type) {
@@ -20,6 +17,36 @@ public class BasicCustomLightSource implements ICustomLightSource {
         this.type = type;
         this.emittingLight = emittingLight;
         this.migrated = migrated;
+    }
+
+    @Override
+    public IntPosition getPosition() {
+        return position;
+    }
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public int getCustomLuminance() {
+        return emittingLight;
+    }
+
+    @Override
+    public boolean isMigrated() {
+        return migrated;
+    }
+
+    @Override
+    public String toString() {
+        return "BasicStoredLightSource{" +
+                "position=" + position +
+                ", type='" + type + '\'' +
+                ", emittingLight=" + emittingLight +
+                ", migrated=" + migrated +
+                '}';
     }
 
     @Override
@@ -36,20 +63,5 @@ public class BasicCustomLightSource implements ICustomLightSource {
     @Override
     public int hashCode() {
         return Objects.hash(position, type, emittingLight, migrated);
-    }
-
-    @Override
-    public int getCustomLuminance() {
-        return emittingLight;
-    }
-
-    @Override
-    public String toString() {
-        return "BasicStoredLightSource{" +
-                "position=" + position +
-                ", type='" + type + '\'' +
-                ", emittingLight=" + emittingLight +
-                ", migrated=" + migrated +
-                '}';
     }
 }

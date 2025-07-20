@@ -1,12 +1,8 @@
 package me.shawlaf.varlight.persistence.nls.common.exception;
 
-import lombok.Getter;
-
 public class ExpectedMagicNumberException extends RuntimeException {
 
-    @Getter
     private int expected;
-    @Getter
     private int got;
 
     public ExpectedMagicNumberException(int expected, int got) {
@@ -14,5 +10,13 @@ public class ExpectedMagicNumberException extends RuntimeException {
 
         this.expected = expected;
         this.got = got;
+    }
+
+    public int getExpected() {
+        return expected;
+    }
+
+    public int getGot() {
+        return got;
     }
 }

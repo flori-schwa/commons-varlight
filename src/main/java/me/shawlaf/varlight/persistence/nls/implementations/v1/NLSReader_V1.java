@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.persistence.nls.implementations.v1;
 
-import lombok.Getter;
 import me.shawlaf.varlight.persistence.nls.common.NLSHeader;
 import me.shawlaf.varlight.persistence.nls.common.io.NLSCommonInputStream;
 
@@ -11,7 +10,6 @@ public class NLSReader_V1 implements AutoCloseable {
 
     private final NLSCommonInputStream in;
 
-    @Getter
     private final int regionX, regionZ;
 
     /**
@@ -34,6 +32,14 @@ public class NLSReader_V1 implements AutoCloseable {
 
         this.regionX = this.in.readInt();
         this.regionZ = this.in.readInt();
+    }
+
+    public int getRegionX() {
+        return regionX;
+    }
+
+    public int getRegionZ() {
+        return regionZ;
     }
 
     @Override

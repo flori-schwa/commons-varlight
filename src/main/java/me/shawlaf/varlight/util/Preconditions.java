@@ -1,9 +1,10 @@
 package me.shawlaf.varlight.util;
 
-import lombok.experimental.UtilityClass;
+public final class Preconditions {
 
-@UtilityClass
-public class Preconditions {
+    private Preconditions() {
+
+    }
 
     public static void assertInRange(String paramName, int value, int minIncl, int maxIncl) {
         if (value < minIncl) {

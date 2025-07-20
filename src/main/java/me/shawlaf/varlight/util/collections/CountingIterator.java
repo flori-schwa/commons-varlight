@@ -1,14 +1,11 @@
 package me.shawlaf.varlight.util.collections;
 
-import lombok.Getter;
-
 import java.util.Iterator;
 
 public class CountingIterator<T> implements Iterator<T> {
 
-    @Getter
     private int count;
-    private Iterator<T> base;
+    private final Iterator<T> base;
 
     public CountingIterator(Iterator<T> base) {
         this.base = base;
@@ -19,6 +16,10 @@ public class CountingIterator<T> implements Iterator<T> {
             next();
         }
 
+        return count;
+    }
+
+    public int getCount() {
         return count;
     }
 

@@ -1,6 +1,5 @@
 package me.shawlaf.varlight.persistence.nls.common;
 
-import lombok.Getter;
 import me.shawlaf.varlight.persistence.nls.common.exception.ExpectedMagicNumberException;
 import me.shawlaf.varlight.persistence.nls.common.io.NLSCommonInputStream;
 import org.jetbrains.annotations.Nullable;
@@ -11,10 +10,8 @@ import java.util.Objects;
 
 public class NLSHeader {
 
-    @Getter
     private final ExpectedMagicNumberException exception;
 
-    @Getter
     private final int version;
 
     public static NLSHeader readFromStream(InputStream iStream) throws IOException {
@@ -32,6 +29,14 @@ public class NLSHeader {
     private NLSHeader(int version, @Nullable ExpectedMagicNumberException exception) {
         this.version = version;
         this.exception = exception;
+    }
+
+    public ExpectedMagicNumberException getException() {
+        return exception;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public void validRequired() {

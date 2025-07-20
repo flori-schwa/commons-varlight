@@ -1,14 +1,15 @@
 package me.shawlaf.varlight.util.collections;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.Iterator;
 import java.util.stream.Collector;
 
-@UtilityClass
-public class IteratorUtils {
+public final class IteratorUtils {
 
-    public <T, A, R> R collectFromIterator(Iterator<T> iterator, Collector<T, A, R> collector) {
+    private IteratorUtils() {
+
+    }
+
+    public static <T, A, R> R collectFromIterator(Iterator<T> iterator, Collector<T, A, R> collector) {
         A resultContainer = collector.supplier().get();
 
         while (iterator.hasNext()) {
