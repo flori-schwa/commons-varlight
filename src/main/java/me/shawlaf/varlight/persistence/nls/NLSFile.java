@@ -179,6 +179,7 @@ public class NLSFile implements IRegionCustomLightAccess {
 
                 chunks[index] = chunk;
                 ++nonEmptyChunks;
+                dirty = true;
                 return 0;
             } else {
                 ret = chunk.getCustomLuminance(position);
@@ -193,12 +194,10 @@ public class NLSFile implements IRegionCustomLightAccess {
                     chunks[index] = null;
                     --nonEmptyChunks;
                 }
+                dirty = true;
+                return ret;
             }
-
-            dirty = true;
         }
-
-        return ret;
     }
 
     @Override
