@@ -457,7 +457,7 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     }
 
     private int indexOf(IntPosition position) {
-        return indexOf(position.getChunkRelativeX(), position.y, position.getChunkRelativeZ());
+        return indexOf(position.getChunkRelativeX(), position.y(), position.getChunkRelativeZ());
     }
 
     private int indexOf(int x, int y, int z) {

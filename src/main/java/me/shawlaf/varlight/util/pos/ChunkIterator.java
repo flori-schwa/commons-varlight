@@ -19,11 +19,11 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
         this.start = start;
         this.end = end;
 
-        this.xDirection = RegionIterator.binaryStep(end.x - start.x);
-        this.zDirection = RegionIterator.binaryStep(end.z - start.z);
+        this.xDirection = RegionIterator.binaryStep(end.x() - start.x());
+        this.zDirection = RegionIterator.binaryStep(end.z() - start.z());
 
-        this.nextX = start.x;
-        this.nextZ = start.z;
+        this.nextX = start.x();
+        this.nextZ = start.z();
     }
 
     @Override
@@ -44,11 +44,11 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
     }
 
     public int getLengthX() {
-        return Math.abs(end.x - start.x) + 1;
+        return Math.abs(end.x() - start.x()) + 1;
     }
 
     public int getLengthZ() {
-        return Math.abs(end.z - start.z) + 1;
+        return Math.abs(end.z() - start.z()) + 1;
     }
 
     @Override
@@ -57,19 +57,19 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
     }
 
     private boolean zInRange(int z) {
-        if (start.z < end.z) {
-            return z >= start.z && z <= end.z;
+        if (start.z() < end.z()) {
+            return z >= start.z() && z <= end.z();
         }
 
-        return z >= end.z && z <= start.z;
+        return z >= end.z() && z <= start.z();
     }
 
     private boolean xInRange(int x) {
-        if (start.x < end.x) {
-            return x >= start.x && x <= end.x;
+        if (start.x() < end.x()) {
+            return x >= start.x() && x <= end.x();
         }
 
-        return x >= end.x && x <= start.x;
+        return x >= end.x() && x <= start.x();
     }
 
     private boolean stepZ() {
@@ -85,7 +85,7 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
     private void step() {
         if (zDirection != 0) {
             if (!stepZ()) {
-                nextZ = start.z;
+                nextZ = start.z();
             } else {
                 return;
             }

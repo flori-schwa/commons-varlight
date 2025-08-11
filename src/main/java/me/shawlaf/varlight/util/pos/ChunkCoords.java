@@ -4,17 +4,9 @@ import me.shawlaf.varlight.util.*;
 
 import java.util.Objects;
 
-// TODO Convert to record
-public class ChunkCoords {
+public record ChunkCoords(int x, int z) {
 
     public static final ChunkCoords ORIGIN = new ChunkCoords(0, 0);
-
-    public final int x, z;
-
-    public ChunkCoords(int x, int z) {
-        this.x = x;
-        this.z = z;
-    }
 
     public int getRegionX() {
         return x >> 5;
@@ -74,25 +66,6 @@ public class ChunkCoords {
 
     public ChunkCoords getRelativeChunk(int dx, int dz) {
         return new ChunkCoords(x + dx, z + dz);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ChunkCoords that = (ChunkCoords) o;
-        return x == that.x &&
-                z == that.z;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, z);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("ChunkCoords{x=%d, z=%d}", x, z);
     }
 
     public String toShortString() {

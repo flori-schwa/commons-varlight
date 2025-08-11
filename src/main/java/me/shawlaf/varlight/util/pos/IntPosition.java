@@ -4,21 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class IntPosition implements Comparable<IntPosition> {
+public record IntPosition(int x, int y, int z) implements Comparable<IntPosition> {
 
     public static final IntPosition ORIGIN = new IntPosition(0, 0, 0);
-
-    public final int x, y, z;
-
-    public IntPosition(long val) {
-        this((int) (val >> 38), (int) (val & 0xFFF), (int) (val << 26 >> 38));
-    }
-
-    public IntPosition(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
 
     public int getChunkRelativeX() {
         return x & 0xF;
@@ -56,10 +44,6 @@ public class IntPosition implements Comparable<IntPosition> {
         return Math.abs(other.z - this.z);
     }
 
-    public boolean outOfBounds() {
-        return y < 0 || y > 255;
-    }
-
     public ChunkSectionPosition getChunkSection() {
         return new ChunkSectionPosition(getChunkX(), y >> 4, getChunkZ());
     }
@@ -80,10 +64,6 @@ public class IntPosition implements Comparable<IntPosition> {
         return new IntPosition(x + dx, y + dy, z + dz);
     }
 
-    public long encode() {
-        return (((long) x & 0x3FFFFFF) << 38) | (((long) z & 0x3FFFFFF) << 12) | ((long) y & 0xFFF);
-    }
-
     public ChunkCoords toChunkCoords() {
         return new ChunkCoords(getChunkX(), getChunkZ());
     }
@@ -92,32 +72,8 @@ public class IntPosition implements Comparable<IntPosition> {
         return new RegionCoords(getRegionX(), getRegionZ());
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        IntPosition that = (IntPosition) o;
-        return x == that.x &&
-                y == that.y &&
-                z == that.z;
-    }
-
     public <R> R convert(ConversionFunction<R> func) {
         return func.convert(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y, z);
-    }
-
-    @Override
-    public String toString() {
-        return "IntPosition{" +
-                "x=" + x +
-                ", y=" + y +
-                ", z=" + z +
-                '}';
     }
 
     public String toShortString() {

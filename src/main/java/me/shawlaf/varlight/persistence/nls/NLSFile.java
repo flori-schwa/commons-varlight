@@ -107,7 +107,7 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     public static File getFile(File parent, RegionCoords regionCoords) {
-        return getFile(parent, regionCoords.x, regionCoords.z);
+        return getFile(parent, regionCoords.x(), regionCoords.z());
     }
 
     public static File getFile(File parent, int regionX, int regionZ) {

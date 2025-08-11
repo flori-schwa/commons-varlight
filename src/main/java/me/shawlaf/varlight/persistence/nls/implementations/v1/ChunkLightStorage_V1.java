@@ -32,9 +32,9 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
     }
 
     public int getCustomLuminance(IntPosition position) {
-        int y = position.y >> 4;
+        int y = position.y() >> 4;
 
-        if (position.getChunkX() != chunkPosition.x || position.getChunkZ() != chunkPosition.z) {
+        if (position.getChunkX() != chunkPosition.x() || position.getChunkZ() != chunkPosition.z()) {
             throw new PositionOutOfBoundsException(position);
         }
 
@@ -52,9 +52,9 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
     }
 
     public void setCustomLuminance(IntPosition position, int value) {
-        int y = position.y >> 4;
+        int y = position.y() >> 4;
 
-        if (position.getChunkX() != chunkPosition.x || position.getChunkZ() != chunkPosition.z) {
+        if (position.getChunkX() != chunkPosition.x() || position.getChunkZ() != chunkPosition.z()) {
             throw new PositionOutOfBoundsException(position);
         }
 
@@ -209,7 +209,7 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
     }
 
     private int indexOf(IntPosition position) {
-        return indexOf(position.getChunkRelativeX(), position.y & 0xF, position.getChunkRelativeZ());
+        return indexOf(position.getChunkRelativeX(), position.y() & 0xF, position.getChunkRelativeZ());
     }
 
     private int indexOf(int x, int y, int z) {
@@ -217,9 +217,9 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
     }
 
     private IntPosition fromIndex(int sectionY, int index) {
-        int x = chunkPosition.x * 16 + (index & 0xF);
+        int x = chunkPosition.x() * 16 + (index & 0xF);
         int y = sectionY * 16 + ((index >>> 8) & 0xF);
-        int z = chunkPosition.z * 16 + ((index >>> 4) & 0xF);
+        int z = chunkPosition.z() * 16 + ((index >>> 4) & 0xF);
 
         return new IntPosition(x, y, z);
     }

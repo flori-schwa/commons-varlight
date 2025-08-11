@@ -5,22 +5,16 @@ import me.shawlaf.varlight.util.Preconditions;
 
 import java.util.Objects;
 
-public class ChunkSectionPosition {
+public record ChunkSectionPosition(int x, int y, int z) {
 
     public static final ChunkSectionPosition ORIGIN = new ChunkSectionPosition(0, 0, 0);
 
-    public final int x, y, z;
-
-    public ChunkSectionPosition(ChunkCoords coords, int y) {
-        this(coords.x, y, coords.z);
+    public ChunkSectionPosition {
+        Preconditions.assertInRange("y", y, 0, 15);
     }
 
-    public ChunkSectionPosition(int x, int y, int z) {
-        Preconditions.assertInRange("y", y, 0, 15);
-
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    public ChunkSectionPosition(ChunkCoords coords, int y) {
+        this(coords.x(), y, coords.z());
     }
 
     public ChunkSectionPosition toAbsolute(int regionX, int regionZ) {
@@ -41,20 +35,5 @@ public class ChunkSectionPosition {
 
     public int encodeRegionRelative() {
         return (y << 10) | (getRegionRelativeZ() << 5) | getRegionRelativeX();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ChunkSectionPosition that = (ChunkSectionPosition) o;
-        return x == that.x &&
-                y == that.y &&
-                z == that.z;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y, z);
     }
 }

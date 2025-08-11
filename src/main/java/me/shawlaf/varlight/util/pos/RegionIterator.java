@@ -28,27 +28,27 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
         this.start = Objects.requireNonNull(start, "Start Position must not be null");
         this.end = Objects.requireNonNull(end, "End Position must not be null");
 
-        this.xDirection = binaryStep(end.x - start.x);
-        this.yDirection = binaryStep(end.y - start.y);
-        this.zDirection = binaryStep(end.z - start.z);
+        this.xDirection = binaryStep(end.x() - start.x());
+        this.yDirection = binaryStep(end.y() - start.y());
+        this.zDirection = binaryStep(end.z() - start.z());
 
-        this.nextX = start.x;
-        this.nextY = start.y;
-        this.nextZ = start.z;
+        this.nextX = start.x();
+        this.nextY = start.y();
+        this.nextZ = start.z();
 
         this.next = true;
     }
 
     public int getLengthX() {
-        return Math.abs(end.x - start.x) + 1;
+        return Math.abs(end.x() - start.x()) + 1;
     }
 
     public int getLengthY() {
-        return Math.abs(end.y - start.y) + 1;
+        return Math.abs(end.y() - start.y()) + 1;
     }
 
     public int getLengthZ() {
-        return Math.abs(end.z - start.z) + 1;
+        return Math.abs(end.z() - start.z()) + 1;
     }
 
     @Override
@@ -105,27 +105,27 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
     // region Util
 
     private boolean zInRange(int z) {
-        if (start.z < end.z) {
-            return z >= start.z && z <= end.z;
+        if (start.z() < end.z()) {
+            return z >= start.z() && z <= end.z();
         }
 
-        return z >= end.z && z <= start.z;
+        return z >= end.z() && z <= start.z();
     }
 
     private boolean xInRange(int x) {
-        if (start.x < end.x) {
-            return x >= start.x && x <= end.x;
+        if (start.x() < end.x()) {
+            return x >= start.x() && x <= end.x();
         }
 
-        return x >= end.x && x <= start.x;
+        return x >= end.x() && x <= start.x();
     }
 
     private boolean yInRange(int y) {
-        if (start.y < end.y) {
-            return y >= start.y && y <= end.y;
+        if (start.y() < end.y()) {
+            return y >= start.y() && y <= end.y();
         }
 
-        return y >= end.y && y <= start.y;
+        return y >= end.y() && y <= start.y();
     }
 
     private boolean stepZ() {
@@ -147,7 +147,7 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
 
         if (zDirection != 0) {
             if (!stepZ()) {
-                nextZ = start.z;
+                nextZ = start.z();
             } else {
                 return;
             }
@@ -155,7 +155,7 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
 
         if (xDirection != 0) {
             if (!stepX()) {
-                nextX = start.x;
+                nextX = start.x();
             } else {
                 return;
             }

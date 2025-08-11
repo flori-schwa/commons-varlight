@@ -67,9 +67,9 @@ public class VLDBOutputStream implements Flushable, Closeable, AutoCloseable {
 
     public void writeLightSource(ICustomLightSource lightSource) throws IOException {
         baseStream.writeShort(
-                ((lightSource.getPosition().x & 0xF) << 12) |       // Encoded X
-                        ((lightSource.getPosition().y) << 4) |         // Encoded Y
-                        (lightSource.getPosition().z & 0xF));          // Encoded Z
+                ((lightSource.getPosition().x() & 0xF) << 12) |       // Encoded X
+                        ((lightSource.getPosition().y()) << 4) |         // Encoded Y
+                        (lightSource.getPosition().z() & 0xF));          // Encoded Z
         baseStream.writeByte(((lightSource.getCustomLuminance() & 0xF) << 4) | (lightSource.isMigrated() ? 1 : 0));
         writeASCII(lightSource.getType());
     }
@@ -119,7 +119,7 @@ public class VLDBOutputStream implements Flushable, Closeable, AutoCloseable {
             ChunkCoords chunkCoords = chunks[i];
 
             offsetTable.put(chunkCoords, headerSize + fileBodyBuffer.size());
-            bodyOutputStream.writeChunk(chunkCoords.x, chunkCoords.z, chunkMap.get(chunkCoords).toArray(new ICustomLightSource[0]));
+            bodyOutputStream.writeChunk(chunkCoords.x(), chunkCoords.z(), chunkMap.get(chunkCoords).toArray(new ICustomLightSource[0]));
         }
 
         writeHeader(rx, rz, offsetTable);

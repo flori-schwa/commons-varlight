@@ -218,7 +218,7 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
         requireNonNull(coords);
 
         if (coords.getRegionX() != regionX || coords.getRegionZ() != regionZ) {
-            throw new IllegalArgumentException(String.format("Chunk %d %d not in region %d %d", coords.x, coords.z, regionX, regionZ));
+            throw new IllegalArgumentException(String.format("Chunk %d %d not in region %d %d", coords.x(), coords.z(), regionX, regionZ));
         }
 
         synchronized (lock) {
