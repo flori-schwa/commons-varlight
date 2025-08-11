@@ -48,17 +48,6 @@ public class NibbleArray {
         array[index >> 1] = (byte) b;
     }
 
-    @Deprecated
-    public boolean isAllZeroes() {
-        for (byte b : array) {
-            if (b != 0) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public byte[] toByteArray() {
         return Arrays.copyOf(array, array.length);
     }

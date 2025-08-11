@@ -1,10 +1,8 @@
-package me.shawlaf.varlight.test.persistence;
+package me.shawlaf.varlight.persistence.old;
 
-import me.shawlaf.varlight.persistence.old.BasicCustomLightSource;
-import me.shawlaf.varlight.persistence.old.RegionPersistor;
 import me.shawlaf.varlight.persistence.old.vldb.VLDBFile;
 import me.shawlaf.varlight.persistence.old.vldb.VLDBOutputStream;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -127,9 +125,9 @@ public class TestRegionPersistor {
 
         final BasicCustomLightSource toPut = new BasicCustomLightSource(IntPosition.ORIGIN, 15, true, "minecraft:stone");
 
-        assertFalse(r.isChunkLoaded(ChunkCoords.ORIGIN));
+        assertFalse(r.isChunkLoaded(ChunkPosition.ORIGIN));
         r.put(toPut);
-        assertTrue(r.isChunkLoaded(ChunkCoords.ORIGIN));
+        assertTrue(r.isChunkLoaded(ChunkPosition.ORIGIN));
 
         BasicCustomLightSource get = r.getLightSource(IntPosition.ORIGIN);
 
@@ -140,8 +138,8 @@ public class TestRegionPersistor {
 
         r.save();
 
-        r.unloadChunk(ChunkCoords.ORIGIN);
-        assertFalse(r.isChunkLoaded(ChunkCoords.ORIGIN));
+        r.unloadChunk(ChunkPosition.ORIGIN);
+        assertFalse(r.isChunkLoaded(ChunkPosition.ORIGIN));
 
         get = r.getLightSource(IntPosition.ORIGIN);
 
@@ -151,22 +149,22 @@ public class TestRegionPersistor {
         final BasicCustomLightSource toPut2 = new BasicCustomLightSource(new IntPosition(1, 1, 1), 15, true, "minecraft:stone");
 
         r.put(toPut2);
-        r.unloadChunk(ChunkCoords.ORIGIN);
-        r.unloadChunk(ChunkCoords.ORIGIN);
+        r.unloadChunk(ChunkPosition.ORIGIN);
+        r.unloadChunk(ChunkPosition.ORIGIN);
 
         BasicCustomLightSource get2 = r.getLightSource(new IntPosition(1, 1, 1));
 
         assertEquals(toPut2, get2);
         assertNotSame(toPut2, get2);
 
-        r.unloadChunk(ChunkCoords.ORIGIN);
-        List<BasicCustomLightSource> cache = r.getCache(ChunkCoords.ORIGIN);
+        r.unloadChunk(ChunkPosition.ORIGIN);
+        List<BasicCustomLightSource> cache = r.getCache(ChunkPosition.ORIGIN);
 
         assertTrue(cache.isEmpty());
 
-        r.loadChunk(ChunkCoords.ORIGIN);
+        r.loadChunk(ChunkPosition.ORIGIN);
 
-        cache = r.getCache(ChunkCoords.ORIGIN);
+        cache = r.getCache(ChunkPosition.ORIGIN);
 
         assertEquals(2, cache.size());
 
@@ -177,14 +175,14 @@ public class TestRegionPersistor {
 
         assertNull(r.getLightSource(IntPosition.ORIGIN));
 
-        cache = r.getCache(ChunkCoords.ORIGIN);
+        cache = r.getCache(ChunkPosition.ORIGIN);
 
         assertEquals(1, cache.size());
         assertEquals(toPut2, cache.get(0));
 
-        assertEquals(0, r.getCache(new ChunkCoords(1, 1)).size());
-        r.unloadChunk(ChunkCoords.ORIGIN);
-        assertEquals(0, r.getCache(ChunkCoords.ORIGIN).size());
+        assertEquals(0, r.getCache(new ChunkPosition(1, 1)).size());
+        r.unloadChunk(ChunkPosition.ORIGIN);
+        assertEquals(0, r.getCache(ChunkPosition.ORIGIN).size());
     }
 
     private static class RegionPersistorBasic extends RegionPersistor<BasicCustomLightSource> {

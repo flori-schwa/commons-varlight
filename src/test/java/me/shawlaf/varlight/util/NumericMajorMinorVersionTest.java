@@ -1,12 +1,11 @@
-package me.shawlaf.varlight.test.util;
+package me.shawlaf.varlight.util;
 
-import me.shawlaf.varlight.util.NumericMajorMinorVersion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
-public class TestNumericMajorMinorVersion {
+public class NumericMajorMinorVersionTest {
 
     @Test
     public void testParse() {

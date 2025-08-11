@@ -1,6 +1,5 @@
-package me.shawlaf.varlight.test.persistence.nls;
+package me.shawlaf.varlight.persistence.nls.common;
 
-import me.shawlaf.varlight.persistence.nls.common.NibbleArray;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

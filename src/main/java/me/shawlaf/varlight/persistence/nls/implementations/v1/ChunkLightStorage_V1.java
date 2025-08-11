@@ -4,7 +4,7 @@ import me.shawlaf.varlight.persistence.IChunkCustomLightAccess;
 import me.shawlaf.varlight.persistence.nls.common.ChunkSectionNibbleArray;
 import me.shawlaf.varlight.persistence.nls.common.NibbleArray;
 import me.shawlaf.varlight.persistence.nls.common.exception.PositionOutOfBoundsException;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,20 +14,20 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     private static final int SECTION_SIZE = 16 * 16 * 16;
 
-    private final ChunkCoords chunkPosition;
+    private final ChunkPosition chunkPosition;
 
     final ChunkSectionNibbleArray[] lightData = new ChunkSectionNibbleArray[16];
 
-    public ChunkLightStorage_V1(ChunkCoords coords) {
+    public ChunkLightStorage_V1(ChunkPosition coords) {
         this.chunkPosition = coords;
     }
 
     public ChunkLightStorage_V1(int x, int z) {
-        this(new ChunkCoords(x, z));
+        this(new ChunkPosition(x, z));
     }
 
     @Override
-    public ChunkCoords getChunkPosition() {
+    public ChunkPosition getChunkPosition() {
         return chunkPosition;
     }
 
@@ -77,72 +77,6 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
         }
     }
 
-    @Override
-    public @NotNull Iterator<IntPosition> iterateLightSources() {
-        final int mask = getMask();
-
-        return new Iterator<IntPosition>() {
-            boolean hasNext;
-
-            IntPosition next = null;
-            int y = 0;
-            int i = -1;
-
-            {
-                hasNext = findNextLightSource();
-            }
-
-            @Override
-            public boolean hasNext() {
-                return hasNext;
-            }
-
-            @Override
-            public IntPosition next() {
-                if (!hasNext) {
-                    throw new NoSuchElementException();
-                }
-
-                IntPosition result = next;
-                this.hasNext = findNextLightSource();
-
-                return result;
-            }
-
-            private boolean findNextSection() {
-                for (; y < 16; y++) {
-                    if ((mask & y) != 0) {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            private boolean findNextLightSource() {
-                if (i < 0) {
-                    if (!findNextSection()) {
-                        return false;
-                    }
-
-                    i = 0;
-                }
-
-                NibbleArray arr = lightData[y];
-
-                while (i < SECTION_SIZE) {
-                    if (arr.get(i) > 0) {
-                        next = fromIndex(y, i);
-                        return true;
-                    }
-                }
-
-                i = -1;
-                return findNextLightSource();
-            }
-        };
-    }
-
     public boolean isEmpty() {
         return !hasData();
     }
@@ -183,15 +117,6 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     public void unload() {
         Arrays.fill(lightData, null);
-    }
-
-    public int encodePosition() {
-        int encoded = 0;
-
-        encoded |= chunkPosition.getRegionRelativeX();
-        encoded |= (chunkPosition.getRegionRelativeZ() << 5);
-
-        return encoded;
     }
 
     private ChunkSectionNibbleArray getSection(int y) {

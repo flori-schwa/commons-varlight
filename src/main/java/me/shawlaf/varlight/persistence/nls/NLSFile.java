@@ -9,7 +9,7 @@ import me.shawlaf.varlight.persistence.nls.implementations.v1.ChunkLightStorage_
 import me.shawlaf.varlight.persistence.nls.implementations.v1.NLSReader_V1;
 import me.shawlaf.varlight.persistence.nls.implementations.v1.NLSWriter_V1;
 import me.shawlaf.varlight.util.io.FileUtil;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import me.shawlaf.varlight.util.pos.RegionCoords;
 import org.jetbrains.annotations.NotNull;
@@ -86,7 +86,7 @@ public class NLSFile implements IRegionCustomLightAccess {
                     while (true) {
                         ChunkLightStorage_V1 cls = reader.readChunk();
 
-                        int index = cls.encodePosition();
+                        int index = chunkIndex(cls.getChunkPosition());
 
                         if (chunks[index] != null) {
                             throw new IllegalStateException(String.format("Duplicate Chunk Information for Chunk %s found in File %s", cls.getChunkPosition().toShortString(), file.getAbsolutePath()));
@@ -157,8 +157,8 @@ public class NLSFile implements IRegionCustomLightAccess {
 
     @Override
     public int setCustomLuminance(IntPosition position, int value) {
-        ChunkCoords chunkCoords = position.toChunkCoords();
-        int index = chunkIndex(chunkCoords);
+        ChunkPosition chunkPosition = position.toChunkCoords();
+        int index = chunkIndex(chunkPosition);
         int ret = 0;
 
         synchronized (this) {
@@ -171,7 +171,7 @@ public class NLSFile implements IRegionCustomLightAccess {
                     return 0;
                 }
 
-                chunk = new ChunkLightStorage_V1(chunkCoords);
+                chunk = new ChunkLightStorage_V1(chunkPosition);
 
                 chunk.setCustomLuminance(position, value);
 
@@ -220,8 +220,8 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     @Override
-    public void clearChunk(ChunkCoords chunkCoords) {
-        int index = chunkIndex(chunkCoords);
+    public void clearChunk(ChunkPosition chunkPosition) {
+        int index = chunkIndex(chunkPosition);
 
         synchronized (this) {
             if (chunks[index] == null || !chunks[index].hasData()) {
@@ -235,21 +235,21 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     @Override
-    public int getMask(ChunkCoords chunkCoords) {
+    public int getMask(ChunkPosition chunkPosition) {
         synchronized (this) {
-            IChunkCustomLightAccess cls = chunks[chunkIndex(chunkCoords)];
+            IChunkCustomLightAccess cls = chunks[chunkIndex(chunkPosition)];
 
-            if (cls == null) {
-                return 0;
+            if (cls instanceof ChunkLightStorage_V1 storageV1) {
+                return storageV1.getMask();
             }
 
-            return cls.getMask();
+            throw new UnsupportedOperationException("getMask");
         }
     }
 
     @Override
-    public IChunkCustomLightAccess getChunk(ChunkCoords chunkCoords) {
-        return chunks[chunkIndex(chunkCoords)];
+    public IChunkCustomLightAccess getChunk(ChunkPosition chunkPosition) {
+        return chunks[chunkIndex(chunkPosition)];
     }
 
     public boolean saveAndUnload() throws IOException {
@@ -288,8 +288,8 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     @Override
-    public @NotNull List<ChunkCoords> getAffectedChunks() {
-        List<ChunkCoords> list = new ArrayList<>(nonEmptyChunks);
+    public @NotNull List<ChunkPosition> getAffectedChunks() {
+        List<ChunkPosition> list = new ArrayList<>(nonEmptyChunks);
         int found = 0;
 
         synchronized (this) {
@@ -307,39 +307,6 @@ public class NLSFile implements IRegionCustomLightAccess {
         }
 
         return list;
-    }
-
-    @Override
-    public @NotNull Iterator<IntPosition> iterateAllLightSources() {
-        Queue<Iterator<IntPosition>> chunkIterators = new LinkedList<>();
-
-        for (ChunkCoords chunk : getAffectedChunks()) {
-            chunkIterators.add(iterateLightSources(chunk));
-        }
-
-        return new Iterator<IntPosition>() {
-            Iterator<IntPosition> current = chunkIterators.poll();
-
-            @Override
-            public boolean hasNext() {
-                return current != null && current.hasNext();
-            }
-
-            @Override
-            public IntPosition next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-
-                IntPosition result = current.next();
-
-                if (!current.hasNext()) {
-                    current = chunkIterators.poll();
-                }
-
-                return result;
-            }
-        };
     }
 
     public void unload() {
@@ -360,8 +327,8 @@ public class NLSFile implements IRegionCustomLightAccess {
         }
     }
 
-    private int chunkIndex(ChunkCoords chunkCoords) {
-        return chunkIndex(chunkCoords.getRegionRelativeX(), chunkCoords.getRegionRelativeZ());
+    private int chunkIndex(ChunkPosition chunkPosition) {
+        return chunkIndex(chunkPosition.getRegionRelativeX(), chunkPosition.getRegionRelativeZ());
     }
 
     private int chunkIndex(int cx, int cz) {

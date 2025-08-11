@@ -2,10 +2,10 @@ package me.shawlaf.varlight.util.pos;
 
 import me.shawlaf.varlight.util.collections.PredictableSizeIterator;
 
-public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
+public class ChunkIterator implements PredictableSizeIterator<ChunkPosition> {
 
-    private final ChunkCoords start;
-    private final ChunkCoords end;
+    private final ChunkPosition start;
+    private final ChunkPosition end;
 
     private final int xDirection;
     private final int zDirection;
@@ -15,7 +15,7 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
 
     private boolean next = true;
 
-    public ChunkIterator(ChunkCoords start, ChunkCoords end) {
+    public ChunkIterator(ChunkPosition start, ChunkPosition end) {
         this.start = start;
         this.end = end;
 
@@ -32,12 +32,12 @@ public class ChunkIterator implements PredictableSizeIterator<ChunkCoords> {
     }
 
     @Override
-    public ChunkCoords next() {
+    public ChunkPosition next() {
         if (!next) {
             throw new IndexOutOfBoundsException("There are no more elements left to iterate over");
         }
 
-        ChunkCoords nextCoords = new ChunkCoords(nextX, nextZ);
+        ChunkPosition nextCoords = new ChunkPosition(nextX, nextZ);
         step();
 
         return nextCoords;

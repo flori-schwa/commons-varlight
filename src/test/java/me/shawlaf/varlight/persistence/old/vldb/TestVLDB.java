@@ -1,10 +1,7 @@
-package me.shawlaf.varlight.test.persistence.vldb;
+package me.shawlaf.varlight.persistence.old.vldb;
 
 import me.shawlaf.varlight.persistence.old.BasicCustomLightSource;
-import me.shawlaf.varlight.persistence.old.vldb.VLDBFile;
-import me.shawlaf.varlight.persistence.old.vldb.VLDBInputStream;
-import me.shawlaf.varlight.persistence.old.vldb.VLDBOutputStream;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.io.FileUtil;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
@@ -185,10 +182,10 @@ public class TestVLDB {
             assertEquals(0, regionX);
             assertEquals(0, regionZ);
 
-            Map<ChunkCoords, Integer> header = in.readHeader(regionX, regionZ);
+            Map<ChunkPosition, Integer> header = in.readHeader(regionX, regionZ);
 
-            assertEquals(26, header.get(new ChunkCoords(0, 0)));
-            assertEquals(26 + (2 + 3 + 10), header.get(new ChunkCoords(0, 1)));
+            assertEquals(26, header.get(new ChunkPosition(0, 0)));
+            assertEquals(26 + (2 + 3 + 10), header.get(new ChunkPosition(0, 1)));
 
         } catch (IOException e) {
             fail("Something went wrong", e);
@@ -216,10 +213,10 @@ public class TestVLDB {
             assertEquals(0, regionX);
             assertEquals(0, regionZ);
 
-            Map<ChunkCoords, Integer> header = in.readHeader(regionX, regionZ);
+            Map<ChunkPosition, Integer> header = in.readHeader(regionX, regionZ);
 
-            assertEquals(26, header.get(new ChunkCoords(0, 0)));
-            assertEquals(26 + (2 + 3 + 10), header.get(new ChunkCoords(0, 1)));
+            assertEquals(26, header.get(new ChunkPosition(0, 0)));
+            assertEquals(26 + (2 + 3 + 10), header.get(new ChunkPosition(0, 1)));
 
         } catch (IOException e) {
             fail("Something went wrong", e);
@@ -336,7 +333,7 @@ public class TestVLDB {
 
             // region without 1,0 (testing removeChunk)
 
-            vldbFile.removeChunk(new ChunkCoords(1, 0));
+            vldbFile.removeChunk(new ChunkPosition(1, 0));
 
             assertTrue(vldbFile.hasChunkData(0, 0));
             assertFalse(vldbFile.hasChunkData(1, 0));
@@ -445,11 +442,11 @@ public class TestVLDB {
             // region testing bad input for removeChunk
 
             assertThrows(IllegalArgumentException.class,
-                    () -> vldbFile.removeChunk(new ChunkCoords(-1, -1))
+                    () -> vldbFile.removeChunk(new ChunkPosition(-1, -1))
             );
 
             assertThrows(IllegalStateException.class,
-                    () -> vldbFile.removeChunk(new ChunkCoords(16, 16))
+                    () -> vldbFile.removeChunk(new ChunkPosition(16, 16))
             );
 
             // endregion

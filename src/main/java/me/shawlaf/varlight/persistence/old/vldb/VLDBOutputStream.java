@@ -1,7 +1,7 @@
 package me.shawlaf.varlight.persistence.old.vldb;
 
 import me.shawlaf.varlight.persistence.old.ICustomLightSource;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -95,20 +95,20 @@ public class VLDBOutputStream implements Flushable, Closeable, AutoCloseable {
             throw new IllegalArgumentException("Not all light sources are in the same region!");
         }
 
-        final Map<ChunkCoords, List<ICustomLightSource>> chunkMap = new HashMap<>();
-        final Map<ChunkCoords, Integer> offsetTable = new HashMap<>();
+        final Map<ChunkPosition, List<ICustomLightSource>> chunkMap = new HashMap<>();
+        final Map<ChunkPosition, Integer> offsetTable = new HashMap<>();
 
         for (int i = 0; i < region.length; i++) {
-            ChunkCoords chunkCoords = region[i].getPosition().toChunkCoords();
+            ChunkPosition chunkPosition = region[i].getPosition().toChunkCoords();
 
-            if (!chunkMap.containsKey(chunkCoords)) {
-                chunkMap.put(chunkCoords, new ArrayList<>());
+            if (!chunkMap.containsKey(chunkPosition)) {
+                chunkMap.put(chunkPosition, new ArrayList<>());
             }
 
-            chunkMap.get(chunkCoords).add(region[i]);
+            chunkMap.get(chunkPosition).add(region[i]);
         }
 
-        final ChunkCoords[] chunks = chunkMap.keySet().toArray(new ChunkCoords[0]);
+        final ChunkPosition[] chunks = chunkMap.keySet().toArray(new ChunkPosition[0]);
 
         final int headerSize = VLDBUtil.SIZEOF_HEADER_WITHOUT_OFFSET_TABLE + chunks.length * VLDBUtil.SIZEOF_OFFSET_TABLE_ENTRY;
 
@@ -116,23 +116,23 @@ public class VLDBOutputStream implements Flushable, Closeable, AutoCloseable {
         final VLDBOutputStream bodyOutputStream = new VLDBOutputStream(fileBodyBuffer);
 
         for (int i = 0; i < chunks.length; i++) {
-            ChunkCoords chunkCoords = chunks[i];
+            ChunkPosition chunkPosition = chunks[i];
 
-            offsetTable.put(chunkCoords, headerSize + fileBodyBuffer.size());
-            bodyOutputStream.writeChunk(chunkCoords.x(), chunkCoords.z(), chunkMap.get(chunkCoords).toArray(new ICustomLightSource[0]));
+            offsetTable.put(chunkPosition, headerSize + fileBodyBuffer.size());
+            bodyOutputStream.writeChunk(chunkPosition.x(), chunkPosition.z(), chunkMap.get(chunkPosition).toArray(new ICustomLightSource[0]));
         }
 
         writeHeader(rx, rz, offsetTable);
         write(fileBodyBuffer.toByteArray());
     }
 
-    public void writeHeader(int regionX, int regionZ, Map<ChunkCoords, Integer> offsetTable) throws IOException {
+    public void writeHeader(int regionX, int regionZ, Map<ChunkPosition, Integer> offsetTable) throws IOException {
         writeInt32(VLDBInputStream.VLDB_MAGIC);
         writeInt32(regionX);
         writeInt32(regionZ);
         writeInt16(offsetTable.keySet().size());
 
-        for (Map.Entry<ChunkCoords, Integer> entry : offsetTable.entrySet()) {
+        for (Map.Entry<ChunkPosition, Integer> entry : offsetTable.entrySet()) {
             writeInt16((entry.getKey().getRegionRelativeX()) << 8 | entry.getKey().getRegionRelativeZ());
             writeInt32(entry.getValue());
         }

@@ -2,7 +2,7 @@ package me.shawlaf.varlight.persistence.old;
 
 import me.shawlaf.varlight.persistence.LightPersistFailedException;
 import me.shawlaf.varlight.persistence.old.vldb.VLDBFile;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +25,7 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
 
     private final L[][] chunkCache = createMultiArr(REGION_SIZE * REGION_SIZE);
     private final int[] chunkSizes = new int[REGION_SIZE * REGION_SIZE];
-    private final List<ChunkCoords> dirtyChunks = new ArrayList<>(REGION_SIZE * REGION_SIZE);
+    private final List<ChunkPosition> dirtyChunks = new ArrayList<>(REGION_SIZE * REGION_SIZE);
 
     public RegionPersistor(@NotNull File vldbRoot, int regionX, int regionZ, boolean deflated) throws IOException {
         Objects.requireNonNull(vldbRoot);
@@ -86,35 +86,35 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     }
 
     /**
-     * <p>Marks the Chunk with the specified {@link ChunkCoords} as dirty.</p>
+     * <p>Marks the Chunk with the specified {@link ChunkPosition} as dirty.</p>
      *
-     * @param chunkCoords The Position of the Chunk, where changes to Light sources have occured.
+     * @param chunkPosition The Position of the Chunk, where changes to Light sources have occured.
      */
-    public void markDirty(ChunkCoords chunkCoords) {
-        assertInRegion(chunkCoords);
+    public void markDirty(ChunkPosition chunkPosition) {
+        assertInRegion(chunkPosition);
 
         synchronized (chunkLock) {
-            dirtyChunks.add(chunkCoords);
+            dirtyChunks.add(chunkPosition);
         }
     }
 
     /**
      * <p>Loads The Light sources of the specified Chunk from the raw data into the cache.</p>
      *
-     * @param chunkCoords The Coordinates of the Chunk, whose Custom Light data should be loaded.
+     * @param chunkPosition The Coordinates of the Chunk, whose Custom Light data should be loaded.
      * @throws IOException When an {@link IOException} occurs while reading the data.
      */
-    public void loadChunk(@NotNull ChunkCoords chunkCoords) throws IOException {
-        Objects.requireNonNull(chunkCoords);
-        assertInRegion(chunkCoords);
+    public void loadChunk(@NotNull ChunkPosition chunkPosition) throws IOException {
+        Objects.requireNonNull(chunkPosition);
+        assertInRegion(chunkPosition);
 
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
             L[] lightSources;
 
             synchronized (file) {
-                lightSources = file.readChunk(chunkCoords);
+                lightSources = file.readChunk(chunkPosition);
             }
 
             L[] fullChunk = createArray(CHUNK_SIZE);
@@ -138,32 +138,32 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     }
 
     /**
-     * <p>Checks if the Custom Light data for the Chunk with the specified {@link ChunkCoords} is currently loaded into the cache.</p>
+     * <p>Checks if the Custom Light data for the Chunk with the specified {@link ChunkPosition} is currently loaded into the cache.</p>
      *
-     * @param chunkCoords The {@link ChunkCoords} to check
+     * @param chunkPosition The {@link ChunkPosition} to check
      * @return true, if the Light data for the Chunk is loaded into the cache.
      */
-    public boolean isChunkLoaded(@NotNull ChunkCoords chunkCoords) {
-        Objects.requireNonNull(chunkCoords);
-        assertInRegion(chunkCoords);
+    public boolean isChunkLoaded(@NotNull ChunkPosition chunkPosition) {
+        Objects.requireNonNull(chunkPosition);
+        assertInRegion(chunkPosition);
 
         synchronized (chunkLock) {
-            return chunkCache[chunkIndex(chunkCoords)] != null;
+            return chunkCache[chunkIndex(chunkPosition)] != null;
         }
     }
 
     /**
-     * <p>Unloads the Custom Light data for the Chunk with the specified {@link ChunkCoords} from the cache.</p>
-     * <p>If the Chunk was marked as dirty in {@link RegionPersistor#markDirty(ChunkCoords)} or {@link RegionPersistor#markDirty(IntPosition)} the Chunk will be flushed.</p>
+     * <p>Unloads the Custom Light data for the Chunk with the specified {@link ChunkPosition} from the cache.</p>
+     * <p>If the Chunk was marked as dirty in {@link RegionPersistor#markDirty(ChunkPosition)} or {@link RegionPersistor#markDirty(IntPosition)} the Chunk will be flushed.</p>
      *
-     * @param chunkCoords The {@link ChunkCoords} of the Chunk, whose Light data should be unloaded from the cache.
+     * @param chunkPosition The {@link ChunkPosition} of the Chunk, whose Light data should be unloaded from the cache.
      * @throws IOException If an {@link IOException} occurs while flushing the Chunk.
      */
-    public void unloadChunk(@NotNull ChunkCoords chunkCoords) throws IOException {
-        Objects.requireNonNull(chunkCoords);
-        assertInRegion(chunkCoords);
+    public void unloadChunk(@NotNull ChunkPosition chunkPosition) throws IOException {
+        Objects.requireNonNull(chunkPosition);
+        assertInRegion(chunkPosition);
 
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
             L[] toUnload = chunkCache[chunkIndex];
@@ -172,8 +172,8 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
                 return;
             }
 
-            if (dirtyChunks.contains(chunkCoords)) {
-                flushChunk(chunkCoords, getNonNullFromChunk(chunkCoords));
+            if (dirtyChunks.contains(chunkPosition)) {
+                flushChunk(chunkPosition, getNonNullFromChunk(chunkPosition));
             }
 
             chunkSizes[chunkIndex] = 0;
@@ -182,25 +182,25 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     }
 
     /**
-     * <p>Returns the current Cache for the Chunk with the specified {@link ChunkCoords} as a List of Light sources.</p>
+     * <p>Returns the current Cache for the Chunk with the specified {@link ChunkPosition} as a List of Light sources.</p>
      *
-     * @param chunkCoords The {@link ChunkCoords} of the Chunk, whose cache is being queried.
+     * @param chunkPosition The {@link ChunkPosition} of the Chunk, whose cache is being queried.
      * @return A {@link List} of type {@code T}, the Light source data, currently in cache.
      */
     @NotNull
-    public List<L> getCache(@NotNull ChunkCoords chunkCoords) {
-        Objects.requireNonNull(chunkCoords);
-        assertInRegion(chunkCoords);
+    public List<L> getCache(@NotNull ChunkPosition chunkPosition) {
+        Objects.requireNonNull(chunkPosition);
+        assertInRegion(chunkPosition);
 
         List<L> chunk;
 
         synchronized (chunkLock) {
-            L[] chunkArray = chunkCache[chunkIndex(chunkCoords)];
+            L[] chunkArray = chunkCache[chunkIndex(chunkPosition)];
 
             if (chunkArray == null) {
                 chunk = new ArrayList<>();
             } else {
-                chunk = new ArrayList<>(getNonNullFromChunk(chunkCoords));
+                chunk = new ArrayList<>(getNonNullFromChunk(chunkPosition));
             }
         }
 
@@ -209,23 +209,23 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
 
     /**
      * <p>Looks up Custom Light source Data at the specified {@link IntPosition}, if the Chunk containing the Position is not currently loaded in the cache,
-     * The Chunk will be loaded using {@link RegionPersistor#loadChunk(ChunkCoords)}</p>
+     * The Chunk will be loaded using {@link RegionPersistor#loadChunk(ChunkPosition)}</p>
      *
      * @param position The Position to look up.
      * @return An instance of {@code L} or {@code null} if there is now Light source at the given Position
-     * @throws IOException If an {@link IOException} occurs during {@link RegionPersistor#loadChunk(ChunkCoords)}
+     * @throws IOException If an {@link IOException} occurs during {@link RegionPersistor#loadChunk(ChunkPosition)}
      */
     @Nullable
     public L getLightSource(@NotNull IntPosition position) throws IOException {
         Objects.requireNonNull(position);
         assertInRegion(position);
 
-        final ChunkCoords chunkCoords = position.toChunkCoords();
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final ChunkPosition chunkPosition = position.toChunkCoords();
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
             if (chunkCache[chunkIndex] == null) {
-                loadChunk(chunkCoords);
+                loadChunk(chunkPosition);
             }
 
             return chunkCache[chunkIndex][indexOf(position)];
@@ -239,21 +239,21 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
      * <p>
      * <br />
      *
-     * <p>If The Chunk containing {@link ICustomLightSource#getPosition()} is not yet loaded into the cache, {@link RegionPersistor#loadChunk(ChunkCoords)} will be called.</p>
+     * <p>If The Chunk containing {@link ICustomLightSource#getPosition()} is not yet loaded into the cache, {@link RegionPersistor#loadChunk(ChunkPosition)} will be called.</p>
      *
      * @param lightSource The Light source to insert
-     * @throws IOException If an {@link IOException} occurs during {@link RegionPersistor#loadChunk(ChunkCoords)}
+     * @throws IOException If an {@link IOException} occurs during {@link RegionPersistor#loadChunk(ChunkPosition)}
      */
     public void put(@NotNull L lightSource) throws IOException {
         Objects.requireNonNull(lightSource);
         assertInRegion(lightSource.getPosition());
 
-        final ChunkCoords chunkCoords = lightSource.getPosition().toChunkCoords();
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final ChunkPosition chunkPosition = lightSource.getPosition().toChunkCoords();
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
             if (chunkCache[chunkIndex] == null) {
-                loadChunk(chunkCoords);
+                loadChunk(chunkPosition);
             }
 
             putInternal(lightSource);
@@ -265,13 +265,13 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
         Objects.requireNonNull(position);
         assertInRegion(position);
 
-        final ChunkCoords chunkCoords = position.toChunkCoords();
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final ChunkPosition chunkPosition = position.toChunkCoords();
+        final int chunkIndex = chunkIndex(chunkPosition);
         final int index = indexOf(position);
 
         synchronized (chunkLock) {
             if (chunkCache[chunkIndex] == null) {
-                loadChunk(chunkCoords);
+                loadChunk(chunkPosition);
             }
 
             L[] chunkArray = chunkCache[chunkIndex];
@@ -280,7 +280,7 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
                 chunkArray[index] = null;
                 --chunkSizes[chunkIndex];
 
-                markDirty(chunkCoords);
+                markDirty(chunkPosition);
             }
         }
     }
@@ -293,7 +293,7 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     public void flushAll() throws IOException {
         synchronized (chunkLock) {
             synchronized (file) {
-                for (ChunkCoords key : dirtyChunks.toArray(new ChunkCoords[dirtyChunks.size()])) {
+                for (ChunkPosition key : dirtyChunks.toArray(new ChunkPosition[dirtyChunks.size()])) {
                     flushChunk(key);
                 }
             }
@@ -301,9 +301,9 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
     }
 
     /**
-     * @return A {@link List} of {@link ChunkCoords} that contain Custom Light data inside the Region.
+     * @return A {@link List} of {@link ChunkPosition} that contain Custom Light data inside the Region.
      */
-    public List<ChunkCoords> getAffectedChunks() {
+    public List<ChunkPosition> getAffectedChunks() {
         synchronized (file) {
             return file.getChunksWithData();
         }
@@ -321,10 +321,10 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
                 for (int z = 0; z < REGION_SIZE; ++z) {
                     for (int x = 0; x < REGION_SIZE; ++x) {
                         int chunkIndex = chunkIndex(cx = regionX + x, cz = regionZ + z);
-                        ChunkCoords chunkCoords = new ChunkCoords(cx, cz);
+                        ChunkPosition chunkPosition = new ChunkPosition(cx, cz);
 
-                        if (chunkCache[chunkIndex] != null && dirtyChunks.contains(chunkCoords)) {
-                            flushChunk(chunkCoords, getNonNullFromChunk(chunkCoords));
+                        if (chunkCache[chunkIndex] != null && dirtyChunks.contains(chunkPosition)) {
+                            flushChunk(chunkPosition, getNonNullFromChunk(chunkPosition));
                         }
                     }
                 }
@@ -352,24 +352,24 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
         }
     }
 
-    private void assertInRegion(ChunkCoords chunkCoords) {
-        if (chunkCoords.getRegionX() != regionX || chunkCoords.getRegionZ() != regionZ) {
-            throw new IllegalArgumentException(String.format("Chunk %s is not in region [%d, %d]", chunkCoords.toShortString(), regionX, regionZ));
+    private void assertInRegion(ChunkPosition chunkPosition) {
+        if (chunkPosition.getRegionX() != regionX || chunkPosition.getRegionZ() != regionZ) {
+            throw new IllegalArgumentException(String.format("Chunk %s is not in region [%d, %d]", chunkPosition.toShortString(), regionX, regionZ));
         }
     }
 
-    private void flushChunk(ChunkCoords chunkCoords, Collection<L> lightData) throws IOException {
-        final int chunkIndex = chunkIndex(chunkCoords);
+    private void flushChunk(ChunkPosition chunkPosition, Collection<L> lightData) throws IOException {
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
-            if (!dirtyChunks.contains(chunkCoords)) {
+            if (!dirtyChunks.contains(chunkPosition)) {
                 return;
             }
 
             synchronized (file) {
                 if (lightData.size() == 0) {
-                    if (file.hasChunkData(chunkCoords)) {
-                        file.removeChunk(chunkCoords);
+                    if (file.hasChunkData(chunkPosition)) {
+                        file.removeChunk(chunkPosition);
                     }
 
                     chunkCache[chunkIndex] = null;
@@ -379,21 +379,21 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
                 file.putChunk(lightData.toArray(createArray(lightData.size())));
             }
 
-            dirtyChunks.remove(chunkCoords);
+            dirtyChunks.remove(chunkPosition);
         }
     }
 
-    private void flushChunk(ChunkCoords chunkCoords) throws IOException {
+    private void flushChunk(ChunkPosition chunkPosition) throws IOException {
         synchronized (chunkLock) {
-            flushChunk(chunkCoords, getNonNullFromChunk(chunkCoords));
+            flushChunk(chunkPosition, getNonNullFromChunk(chunkPosition));
         }
     }
 
     private void putInternal(L lightSource) {
         Objects.requireNonNull(lightSource);
 
-        final ChunkCoords chunkCoords = lightSource.getPosition().toChunkCoords();
-        final int chunkIndex = chunkIndex(chunkCoords);
+        final ChunkPosition chunkPosition = lightSource.getPosition().toChunkCoords();
+        final int chunkIndex = chunkIndex(chunkPosition);
         final int index = indexOf(lightSource.getPosition());
 
         synchronized (chunkLock) {
@@ -415,18 +415,18 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
 
                 // When a light source was modified, aka removed != null, then the amount of Light sources stays the same
 
-                markDirty(chunkCoords);
+                markDirty(chunkPosition);
             } else { // Removed, or no-op
                 if (removed != null) {
-                    markDirty(chunkCoords);
+                    markDirty(chunkPosition);
                     --chunkSizes[chunkIndex]; // One Light source was removed
                 }
             }
         }
     }
 
-    private Collection<L> getNonNullFromChunk(ChunkCoords chunkCoords) {
-        final int chunkIndex = chunkIndex(chunkCoords);
+    private Collection<L> getNonNullFromChunk(ChunkPosition chunkPosition) {
+        final int chunkIndex = chunkIndex(chunkPosition);
 
         synchronized (chunkLock) {
             int chunkSize = chunkSizes[chunkIndex];
@@ -464,8 +464,8 @@ public abstract class RegionPersistor<L extends ICustomLightSource> {
         return (y << 8) | (z << 4) | x;
     }
 
-    private int chunkIndex(ChunkCoords chunkCoords) {
-        return chunkIndex(chunkCoords.getRegionRelativeX(), chunkCoords.getRegionRelativeZ());
+    private int chunkIndex(ChunkPosition chunkPosition) {
+        return chunkIndex(chunkPosition.getRegionRelativeX(), chunkPosition.getRegionRelativeZ());
     }
 
     private int chunkIndex(int cx, int cz) {

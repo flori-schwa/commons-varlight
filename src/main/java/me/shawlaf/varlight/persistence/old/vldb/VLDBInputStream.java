@@ -1,7 +1,7 @@
 package me.shawlaf.varlight.persistence.old.vldb;
 
 import me.shawlaf.varlight.persistence.old.ICustomLightSource;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.io.FileUtil;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import me.shawlaf.varlight.util.Tuple;
@@ -129,8 +129,8 @@ public class VLDBInputStream implements Closeable {
         return lightSources;
     }
 
-    public <L extends ICustomLightSource> Tuple<ChunkCoords, L[]> readChunk(int regionX, int regionZ, IntFunction<L[]> arrayCreator, ToLightSource<L> toLightSource) throws IOException {
-        ChunkCoords chunkCoords = readEncodedChunkCoords(regionX, regionZ);
+    public <L extends ICustomLightSource> Tuple<ChunkPosition, L[]> readChunk(int regionX, int regionZ, IntFunction<L[]> arrayCreator, ToLightSource<L> toLightSource) throws IOException {
+        ChunkPosition chunkPosition = readEncodedChunkCoords(regionX, regionZ);
 
         int amountLightSources = readUInt24();
 
@@ -148,7 +148,7 @@ public class VLDBInputStream implements Closeable {
             int data = readByte();
             String material = readASCII();
 
-            IntPosition position = chunkCoords.getRelative(
+            IntPosition position = chunkPosition.getRelative(
                     ((coords & 0xF000) >>> 12),
                     (coords & 0x0FF0) >>> 4,
                     (coords & 0xF)
@@ -160,31 +160,31 @@ public class VLDBInputStream implements Closeable {
             lightSources[j] = toLightSource.toLightSource(position, lightLevel, migrated, material);
         }
 
-        return new Tuple<>(chunkCoords, lightSources);
+        return new Tuple<>(chunkPosition, lightSources);
     }
 
-    public Map<ChunkCoords, Integer> readHeader(int regionX, int regionZ) throws IOException {
+    public Map<ChunkPosition, Integer> readHeader(int regionX, int regionZ) throws IOException {
         final int amountChunks = readInt16();
 
-        final Map<ChunkCoords, Integer> header = new HashMap<>(amountChunks);
+        final Map<ChunkPosition, Integer> header = new HashMap<>(amountChunks);
 
         for (int i = 0; i < amountChunks; i++) {
-            ChunkCoords chunkCoords = readEncodedChunkCoords(regionX, regionZ);
+            ChunkPosition chunkPosition = readEncodedChunkCoords(regionX, regionZ);
             int offset = readInt32();
 
-            header.put(chunkCoords, offset);
+            header.put(chunkPosition, offset);
         }
 
         return header;
     }
 
-    public ChunkCoords readEncodedChunkCoords(int regionX, int regionZ) throws IOException {
+    public ChunkPosition readEncodedChunkCoords(int regionX, int regionZ) throws IOException {
         int encodedCoords = readInt16();
 
         int cx = ((encodedCoords & 0xFF00) >>> 8) + regionX * 32;
         int cz = (encodedCoords & 0xFF) + regionZ * 32;
 
-        return new ChunkCoords(cx, cz);
+        return new ChunkPosition(cx, cz);
     }
 
     public void skip(int n) throws IOException {

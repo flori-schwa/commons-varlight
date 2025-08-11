@@ -12,12 +12,20 @@ public record IntPosition(int x, int y, int z) implements Comparable<IntPosition
         return x & 0xF;
     }
 
+    public int getChunkSectionRelativeY() {
+        return y & 0xF;
+    }
+
     public int getChunkRelativeZ() {
         return z & 0xF;
     }
 
     public int getChunkX() {
         return x >> 4;
+    }
+
+    public int getChunkY() {
+        return y >> 4;
     }
 
     public int getChunkZ() {
@@ -32,20 +40,8 @@ public record IntPosition(int x, int y, int z) implements Comparable<IntPosition
         return getChunkZ() >> 5;
     }
 
-    public int xDistanceTo(IntPosition other) {
-        return Math.abs(other.x - this.x);
-    }
-
-    public int yDistanceTo(IntPosition other) {
-        return Math.abs(other.y - this.y);
-    }
-
-    public int zDistanceTo(IntPosition other) {
-        return Math.abs(other.z - this.z);
-    }
-
     public ChunkSectionPosition getChunkSection() {
-        return new ChunkSectionPosition(getChunkX(), y >> 4, getChunkZ());
+        return new ChunkSectionPosition(getChunkX(), getChunkY(), getChunkZ());
     }
 
     public int manhattanDistance(IntPosition other) {
@@ -64,12 +60,20 @@ public record IntPosition(int x, int y, int z) implements Comparable<IntPosition
         return new IntPosition(x + dx, y + dy, z + dz);
     }
 
-    public ChunkCoords toChunkCoords() {
-        return new ChunkCoords(getChunkX(), getChunkZ());
+    public ChunkPosition toChunkCoords() {
+        return new ChunkPosition(getChunkX(), getChunkZ());
     }
 
     public RegionCoords toRegionCoords() {
         return new RegionCoords(getRegionX(), getRegionZ());
+    }
+
+    public boolean isContainedInChunk(ChunkPosition chunk) {
+        return isContainedInChunk(chunk.x(), chunk.z());
+    }
+
+    public boolean isContainedInChunk(int chunkX, int chunkZ) {
+        return getChunkX() == chunkX && getChunkZ() == chunkZ;
     }
 
     public <R> R convert(ConversionFunction<R> func) {

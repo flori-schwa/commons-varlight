@@ -1,7 +1,7 @@
 package me.shawlaf.varlight.persistence.old.vldb;
 
 import me.shawlaf.varlight.persistence.old.ICustomLightSource;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.io.FileUtil;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import me.shawlaf.varlight.util.Tuple;
@@ -98,9 +98,9 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
         return true;
     }
 
-    public List<ChunkCoords> getChunksWithData() {
+    public List<ChunkPosition> getChunksWithData() {
         synchronized (lock) {
-            List<ChunkCoords> list = new ArrayList<>(nonEmptyChunks);
+            List<ChunkPosition> list = new ArrayList<>(nonEmptyChunks);
 
             for (int i = 0; i < chunks.length; ++i) {
                 if (chunks[i] == null) {
@@ -110,7 +110,7 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
                 int cx = i >> 5;
                 int cz = i & 0x1F;
 
-                list.add(new ChunkCoords(regionX * 32 + cx, regionZ * 32 + cz));
+                list.add(new ChunkPosition(regionX * 32 + cx, regionZ * 32 + cz));
             }
 
             return list;
@@ -119,18 +119,18 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
 
     @NotNull
     public L[] readChunk(int chunkX, int chunkZ) throws IOException {
-        return readChunk(new ChunkCoords(chunkX, chunkZ));
+        return readChunk(new ChunkPosition(chunkX, chunkZ));
     }
 
     @NotNull
-    public L[] readChunk(@NotNull ChunkCoords chunkCoords) throws IOException {
-        requireNonNull(chunkCoords);
+    public L[] readChunk(@NotNull ChunkPosition chunkPosition) throws IOException {
+        requireNonNull(chunkPosition);
 
-        if (chunkCoords.getRegionX() != regionX || chunkCoords.getRegionZ() != regionZ) {
-            throw new IllegalArgumentException(String.format("%s not in region %d %d", chunkCoords.toString(), regionX, regionZ));
+        if (chunkPosition.getRegionX() != regionX || chunkPosition.getRegionZ() != regionZ) {
+            throw new IllegalArgumentException(String.format("%s not in region %d %d", chunkPosition.toString(), regionX, regionZ));
         }
 
-        int index = chunkIndex(chunkCoords);
+        int index = chunkIndex(chunkPosition);
 
         if (this.chunks[index] == null) {
             return createArray(0);
@@ -164,12 +164,12 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
     }
 
     public boolean hasChunkData(int cx, int cz) {
-        return hasChunkData(new ChunkCoords(cx, cz));
+        return hasChunkData(new ChunkPosition(cx, cz));
     }
 
-    public boolean hasChunkData(ChunkCoords chunkCoords) {
+    public boolean hasChunkData(ChunkPosition chunkPosition) {
         synchronized (lock) {
-            return chunks[chunkIndex(chunkCoords)] != null;
+            return chunks[chunkIndex(chunkPosition)] != null;
         }
     }
 
@@ -196,9 +196,9 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
         }
 
         synchronized (lock) {
-            final ChunkCoords chunkCoords = new ChunkCoords(cx, cz);
+            final ChunkPosition chunkPosition = new ChunkPosition(cx, cz);
 
-            final int index = chunkIndex(chunkCoords);
+            final int index = chunkIndex(chunkPosition);
 
             Tuple<ByteArrayOutputStream, VLDBOutputStream> out = outToMemory();
 
@@ -214,7 +214,7 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
         }
     }
 
-    public void removeChunk(@NotNull ChunkCoords coords) throws IOException {
+    public void removeChunk(@NotNull ChunkPosition coords) throws IOException {
         requireNonNull(coords);
 
         if (coords.getRegionX() != regionX || coords.getRegionZ() != regionZ) {
@@ -337,8 +337,8 @@ public abstract class VLDBFile<L extends ICustomLightSource> {
         nonEmptyChunks = 0;
     }
 
-    private int chunkIndex(ChunkCoords chunkCoords) {
-        return chunkIndex(chunkCoords.getRegionRelativeX(), chunkCoords.getRegionRelativeZ());
+    private int chunkIndex(ChunkPosition chunkPosition) {
+        return chunkIndex(chunkPosition.getRegionRelativeX(), chunkPosition.getRegionRelativeZ());
     }
 
     private int chunkIndex(int cx, int cz) {

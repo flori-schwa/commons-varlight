@@ -2,6 +2,7 @@ package me.shawlaf.varlight.persistence.nls.implementations.v1;
 
 import me.shawlaf.varlight.persistence.nls.common.ChunkSectionNibbleArray;
 import me.shawlaf.varlight.persistence.nls.common.io.NLSCommonOutputStream;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,7 +46,7 @@ public class NLSWriter_V1 implements AutoCloseable {
     }
 
     public void writeChunk(ChunkLightStorage_V1 cls) throws IOException {
-        out.writeShort(cls.encodePosition());
+        out.writeShort(encodePosition(cls.getChunkPosition()));
         out.writeShort(cls.getMask());
 
         for (int y = 0; y < 16; y++) {
@@ -57,5 +58,14 @@ public class NLSWriter_V1 implements AutoCloseable {
 
             out.writeNibbleArray(section);
         }
+    }
+
+    private int encodePosition(ChunkPosition chunkPosition) {
+        int encoded = 0;
+
+        encoded |= chunkPosition.getRegionRelativeX();
+        encoded |= (chunkPosition.getRegionRelativeZ() << 5);
+
+        return encoded;
     }
 }

@@ -3,8 +3,6 @@ package me.shawlaf.varlight.util.pos;
 import me.shawlaf.varlight.util.MathUtil;
 import me.shawlaf.varlight.util.Preconditions;
 
-import java.util.Objects;
-
 public record ChunkSectionPosition(int x, int y, int z) {
 
     public static final ChunkSectionPosition ORIGIN = new ChunkSectionPosition(0, 0, 0);
@@ -13,7 +11,7 @@ public record ChunkSectionPosition(int x, int y, int z) {
         Preconditions.assertInRange("y", y, 0, 15);
     }
 
-    public ChunkSectionPosition(ChunkCoords coords, int y) {
+    public ChunkSectionPosition(ChunkPosition coords, int y) {
         this(coords.x(), y, coords.z());
     }
 

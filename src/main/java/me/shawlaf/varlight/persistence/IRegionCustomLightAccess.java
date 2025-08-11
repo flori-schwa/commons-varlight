@@ -1,6 +1,6 @@
 package me.shawlaf.varlight.persistence;
 
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,23 +18,20 @@ public interface IRegionCustomLightAccess {
 
     int getNonEmptyChunks();
 
-    default boolean hasChunkData(ChunkCoords chunkCoords) {
-        return Optional.ofNullable(getChunk(chunkCoords)).map(IChunkCustomLightAccess::hasData).orElse(false);
+    default boolean hasChunkData(ChunkPosition chunkPosition) {
+        return Optional.ofNullable(getChunk(chunkPosition)).map(IChunkCustomLightAccess::hasData).orElse(false);
     }
 
-    default void clearChunk(ChunkCoords chunkCoords) {
-        Optional.ofNullable(getChunk(chunkCoords)).ifPresent(IChunkCustomLightAccess::clear);
+    default void clearChunk(ChunkPosition chunkPosition) {
+        Optional.ofNullable(getChunk(chunkPosition)).ifPresent(IChunkCustomLightAccess::clear);
     }
 
-    int getMask(ChunkCoords chunkCoords);
+    @Deprecated
+    int getMask(ChunkPosition chunkPosition);
 
-    @Nullable IChunkCustomLightAccess getChunk(ChunkCoords chunkCoords);
+    @Nullable IChunkCustomLightAccess getChunk(ChunkPosition chunkPosition);
 
-    @NotNull List<ChunkCoords> getAffectedChunks();
-
-    default @NotNull Iterator<IntPosition> iterateLightSources(ChunkCoords chunkCoords) {
-        return Optional.ofNullable(getChunk(chunkCoords)).map(IChunkCustomLightAccess::iterateLightSources).orElse(Collections.emptyIterator());
-    }
+    @NotNull List<ChunkPosition> getAffectedChunks();
 
     @NotNull Iterator<IntPosition> iterateAllLightSources();
 

@@ -17,9 +17,9 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
     private boolean next;
     private int nextX, nextY, nextZ;
 
-    public static ChunkIterator squareChunkArea(ChunkCoords center, int radius) {
-        ChunkCoords a = center.getRelativeChunk(-radius, -radius);
-        ChunkCoords b = center.getRelativeChunk(radius, radius);
+    public static ChunkIterator squareChunkArea(ChunkPosition center, int radius) {
+        ChunkPosition a = center.getRelativeChunk(-radius, -radius);
+        ChunkPosition b = center.getRelativeChunk(radius, radius);
 
         return new ChunkIterator(a, b);
     }
@@ -58,7 +58,7 @@ public class RegionIterator implements PredictableSizeIterator<IntPosition> {
 
     // region Chunk Iterator
 
-    public Set<ChunkCoords> getAllContainingChunks() {
+    public Set<ChunkPosition> getAllContainingChunks() {
         return IteratorUtils.collectFromIterator(iterateChunks(), Collectors.toSet());
     }
 

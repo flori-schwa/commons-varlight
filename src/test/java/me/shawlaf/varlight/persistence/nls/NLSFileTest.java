@@ -1,7 +1,6 @@
-package me.shawlaf.varlight.test.persistence.nls;
+package me.shawlaf.varlight.persistence.nls;
 
-import me.shawlaf.varlight.persistence.nls.NLSFile;
-import me.shawlaf.varlight.util.pos.ChunkCoords;
+import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -119,14 +118,14 @@ public class NLSFileTest {
         nlsFile.setCustomLuminance(new IntPosition(0, 65, 0), 4);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
-        assertEquals(0b10101, nlsFile.getMask(ChunkCoords.ORIGIN));
+        assertEquals(0b10101, nlsFile.getMask(ChunkPosition.ORIGIN));
 
         assertTrue(nlsFile.saveAndUnload());
 
         nlsFile = NLSFile.existingFile(file);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
-        assertEquals(0b10101, nlsFile.getMask(ChunkCoords.ORIGIN));
+        assertEquals(0b10101, nlsFile.getMask(ChunkPosition.ORIGIN));
 
         assertEquals(1, nlsFile.getCustomLuminance(new IntPosition(0, 0, 0)));
         assertEquals(2, nlsFile.getCustomLuminance(new IntPosition(0, 32, 0)));
@@ -215,17 +214,17 @@ public class NLSFileTest {
         }
 
         assertEquals(256, nlsFile.getNonEmptyChunks());
-        List<ChunkCoords> affected = nlsFile.getAffectedChunks();
+        List<ChunkPosition> affected = nlsFile.getAffectedChunks();
 
         for (int cz = 0; cz < 32; ++cz) {
             for (int cx = 0; cx < 32; ++cx) {
                 boolean bothEven = (cx & 1) == 0 && (cz & 1) == 0;
-                ChunkCoords chunkCoords = new ChunkCoords(32 * regionX + cx, 32 * regionZ + cz);
+                ChunkPosition chunkPosition = new ChunkPosition(32 * regionX + cx, 32 * regionZ + cz);
 
                 if (bothEven) {
-                    assertTrue(affected.contains(chunkCoords));
+                    assertTrue(affected.contains(chunkPosition));
                 } else {
-                    assertFalse(affected.contains(chunkCoords));
+                    assertFalse(affected.contains(chunkPosition));
                 }
             }
         }
@@ -240,12 +239,12 @@ public class NLSFileTest {
         for (int cz = 0; cz < 32; ++cz) {
             for (int cx = 0; cx < 32; ++cx) {
                 boolean bothEven = (cx & 1) == 0 && (cz & 1) == 0;
-                ChunkCoords chunkCoords = new ChunkCoords(32 * regionX + cx, 32 * regionZ + cz);
+                ChunkPosition chunkPosition = new ChunkPosition(32 * regionX + cx, 32 * regionZ + cz);
 
                 if (bothEven) {
-                    assertTrue(affected.contains(chunkCoords));
+                    assertTrue(affected.contains(chunkPosition));
                 } else {
-                    assertFalse(affected.contains(chunkCoords));
+                    assertFalse(affected.contains(chunkPosition));
                 }
             }
         }
@@ -259,7 +258,7 @@ public class NLSFileTest {
         File file = new File(tempDir, String.format(NLSFile.FILE_NAME_FORMAT, regionX, regionZ));
         NLSFile nlsFile = NLSFile.newFile(file, regionX, regionZ);
 
-        ChunkCoords regionOriginChunk = new ChunkCoords(32 * regionX, 32 * regionZ);
+        ChunkPosition regionOriginChunk = new ChunkPosition(32 * regionX, 32 * regionZ);
         IntPosition regionOrigin = regionOriginChunk.getRelative(0, 0, 0);
 
         nlsFile.setCustomLuminance(regionOrigin, 15);
@@ -295,13 +294,13 @@ public class NLSFileTest {
         File file = new File(tempDir, String.format(NLSFile.FILE_NAME_FORMAT, regionX, regionZ));
         NLSFile nlsFile = NLSFile.newFile(file, regionX, regionZ);
 
-        ChunkCoords regionOriginChunk = new ChunkCoords(32 * regionX, 32 * regionZ);
+        ChunkPosition regionOriginChunk = new ChunkPosition(32 * regionX, 32 * regionZ);
         IntPosition regionOrigin = regionOriginChunk.getRelative(0, 0, 0);
 
         nlsFile.setCustomLuminance(regionOrigin, 15);
         nlsFile.setCustomLuminance(regionOrigin.getRelative(16, 0, 0), 15);
 
-        List<ChunkCoords> affected = nlsFile.getAffectedChunks();
+        List<ChunkPosition> affected = nlsFile.getAffectedChunks();
 
         assertEquals(2, nlsFile.getNonEmptyChunks());
         assertEquals(nlsFile.getNonEmptyChunks(), affected.size());

@@ -2,11 +2,9 @@ package me.shawlaf.varlight.util.pos;
 
 import me.shawlaf.varlight.util.*;
 
-import java.util.Objects;
+public record ChunkPosition(int x, int z) {
 
-public record ChunkCoords(int x, int z) {
-
-    public static final ChunkCoords ORIGIN = new ChunkCoords(0, 0);
+    public static final ChunkPosition ORIGIN = new ChunkPosition(0, 0);
 
     public int getRegionX() {
         return x >> 5;
@@ -64,8 +62,8 @@ public record ChunkCoords(int x, int z) {
         return new IntPosition(this.x * 16 + dx, dy, this.z * 16 + dz);
     }
 
-    public ChunkCoords getRelativeChunk(int dx, int dz) {
-        return new ChunkCoords(x + dx, z + dz);
+    public ChunkPosition getRelativeChunk(int dx, int dz) {
+        return new ChunkPosition(x + dx, z + dz);
     }
 
     public String toShortString() {

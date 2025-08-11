@@ -1,24 +1,22 @@
-package me.shawlaf.varlight.test.util;
+package me.shawlaf.varlight.util.pos;
 
-import me.shawlaf.varlight.util.pos.ChunkCoords;
-import me.shawlaf.varlight.util.pos.IntPosition;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestChunkCoords {
+public class ChunkPositionTest {
 
     @Test
     public void testChunkCoords() {
-        doTest(new ChunkCoords(1, 1), 0, 0, 1, 1);
-        doTest(new ChunkCoords(1, -1), 0, -1, 1, 31);
-        doTest(new ChunkCoords(-1, -1), -1, -1, 31, 31);
-        doTest(new ChunkCoords(-1, 1), -1, 0, 31, 1);
+        doTest(new ChunkPosition(1, 1), 0, 0, 1, 1);
+        doTest(new ChunkPosition(1, -1), 0, -1, 1, 31);
+        doTest(new ChunkPosition(-1, -1), -1, -1, 31, 31);
+        doTest(new ChunkPosition(-1, 1), -1, 0, 31, 1);
     }
 
     private void doTest(
-            ChunkCoords coords,
+            ChunkPosition coords,
             int expectedRegionX,
             int expectedRegionZ,
             int expectedRegionRelativeX,
