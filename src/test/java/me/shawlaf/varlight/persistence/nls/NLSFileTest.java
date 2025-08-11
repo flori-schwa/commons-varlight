@@ -1,5 +1,6 @@
 package me.shawlaf.varlight.persistence.nls;
 
+import me.shawlaf.varlight.persistence.nls.common.NLSConstants;
 import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.junit.jupiter.api.Test;
@@ -16,37 +17,57 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NLSFileTest {
 
+    // TODO Replace this mess
     private byte[] buildTestData(int version, int regionX, int regionZ) {
-        byte[] testData = new byte[4 * 4 + 2 * 2 + 2048];
+        byte[] testData = new byte[
+                4 // Magic Number
+                        + 4 // Version
+                        + 4 // Region X
+                        + 4 // Region Z
+                        + 2 // Chunk Position
+                        + 2 // Chunk Section Count
+                        + 1 // Chunk Y Section
+                        + 2048 // Nibble Array
+                ];
 
         int i = 0;
 
+        // Magic Number
         testData[i++] = 0x4E;
         testData[i++] = 0x41;
         testData[i++] = 0x4C;
         testData[i++] = 0x53;
 
+        // Version
         testData[i++] = (byte) ((version >>> 24) & 0xFF);
         testData[i++] = (byte) ((version >>> 16) & 0xFF);
         testData[i++] = (byte) ((version >>> 8) & 0xFF);
         testData[i++] = (byte) ((version) & 0xFF);
 
+        // Region X
         testData[i++] = (byte) ((regionX >>> 24) & 0xFF);
         testData[i++] = (byte) ((regionX >>> 16) & 0xFF);
         testData[i++] = (byte) ((regionX >>> 8) & 0xFF);
         testData[i++] = (byte) ((regionX) & 0xFF);
 
+        // Region Z
         testData[i++] = (byte) ((regionZ >>> 24) & 0xFF);
         testData[i++] = (byte) ((regionZ >>> 16) & 0xFF);
         testData[i++] = (byte) ((regionZ >>> 8) & 0xFF);
         testData[i++] = (byte) ((regionZ) & 0xFF);
 
+        // Chunk in region
         testData[i++] = 0;
         testData[i++] = 0;
 
+        // Amount of sections in Chunk
         testData[i++] = 0;
         testData[i++] = 1;
 
+        // Section Y Position
+        testData[i++] = 0;
+
+        // Light Data
         testData[i++] = 0x01;
         testData[i++] = 0x23;
         testData[i++] = 0x45;
@@ -71,7 +92,7 @@ public class NLSFileTest {
 
     @Test
     public void testRead(@TempDir File tempDir) throws IOException {
-        byte[] testData = buildTestData(1, 0, 0);
+        byte[] testData = buildTestData(NLSConstants.CURRENT_VERSION_NUM, 0, 0);
 
         File file = new File(tempDir, String.format(NLSFile.FILE_NAME_FORMAT, 0, 0));
 
@@ -96,7 +117,7 @@ public class NLSFileTest {
         }
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
-        assertTrue(nlsFile.saveAndUnload());
+        assertTrue(nlsFile.save());
 
         nlsFile = NLSFile.existingFile(file);
 
@@ -118,14 +139,12 @@ public class NLSFileTest {
         nlsFile.setCustomLuminance(new IntPosition(0, 65, 0), 4);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
-        assertEquals(0b10101, nlsFile.getMask(ChunkPosition.ORIGIN));
 
-        assertTrue(nlsFile.saveAndUnload());
+        assertTrue(nlsFile.save());
 
         nlsFile = NLSFile.existingFile(file);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
-        assertEquals(0b10101, nlsFile.getMask(ChunkPosition.ORIGIN));
 
         assertEquals(1, nlsFile.getCustomLuminance(new IntPosition(0, 0, 0)));
         assertEquals(2, nlsFile.getCustomLuminance(new IntPosition(0, 32, 0)));
@@ -229,7 +248,7 @@ public class NLSFileTest {
             }
         }
 
-        assertTrue(nlsFile.saveAndUnload());
+        assertTrue(nlsFile.save());
 
         nlsFile = NLSFile.existingFile(file);
 
@@ -265,25 +284,21 @@ public class NLSFileTest {
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
         assertTrue(nlsFile.getAffectedChunks().contains(regionOriginChunk));
-        assertEquals(1, nlsFile.getMask(regionOriginChunk));
 
         nlsFile.setCustomLuminance(regionOrigin.getRelative(0, 16, 0), 15);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
         assertTrue(nlsFile.getAffectedChunks().contains(regionOriginChunk));
-        assertEquals(0b11, nlsFile.getMask(regionOriginChunk));
 
         nlsFile.setCustomLuminance(regionOrigin, 0);
 
         assertEquals(1, nlsFile.getNonEmptyChunks());
         assertTrue(nlsFile.getAffectedChunks().contains(regionOriginChunk));
-        assertEquals(0b10, nlsFile.getMask(regionOriginChunk));
 
         nlsFile.setCustomLuminance(regionOrigin.getRelative(0, 16, 0), 0);
 
         assertEquals(0, nlsFile.getNonEmptyChunks());
         assertFalse(nlsFile.getAffectedChunks().contains(regionOriginChunk));
-        assertEquals(0, nlsFile.getMask(regionOriginChunk));
     }
 
     @Test
@@ -311,7 +326,7 @@ public class NLSFileTest {
 
     @Test
     public void testWrongVersion(@TempDir File tempDir) throws IOException {
-        byte[] testData = buildTestData(4, 0, 0);
+        byte[] testData = buildTestData(NLSConstants.CURRENT_VERSION_NUM + 1, 0, 0);
 
         File file = new File(tempDir, "r.0.0.nls");
 

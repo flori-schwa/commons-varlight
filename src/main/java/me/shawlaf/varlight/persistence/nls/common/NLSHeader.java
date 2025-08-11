@@ -2,8 +2,10 @@ package me.shawlaf.varlight.persistence.nls.common;
 
 import me.shawlaf.varlight.persistence.nls.common.exception.ExpectedMagicNumberException;
 import me.shawlaf.varlight.persistence.nls.common.io.NLSCommonInputStream;
+import me.shawlaf.varlight.util.io.FileUtil;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -13,6 +15,12 @@ public class NLSHeader {
     private final ExpectedMagicNumberException exception;
 
     private final int version;
+
+    public static NLSHeader readFromFile(File file) throws IOException {
+        try (InputStream in = FileUtil.openStreamInflate(file)) {
+            return readFromStream(in);
+        }
+    }
 
     public static NLSHeader readFromStream(InputStream iStream) throws IOException {
         NLSCommonInputStream in = new NLSCommonInputStream(iStream);

@@ -1,13 +1,11 @@
 package me.shawlaf.varlight.persistence.nls.implementations.v2;
 
 import me.shawlaf.varlight.persistence.nls.common.ChunkSectionNibbleArray;
-import me.shawlaf.varlight.persistence.nls.common.NibbleArray;
 import me.shawlaf.varlight.persistence.nls.common.io.NLSCommonOutputStream;
 import me.shawlaf.varlight.util.pos.ChunkPosition;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 
@@ -18,6 +16,9 @@ import java.util.SortedMap;
  *
  * [int32] MAGIC_VALUE 0x4E 0x41 0x4C 0x53
  * [int32] VERSION
+ * [RegionData]
+ *
+ * RegionData:
  * [int32] REGION X
  * [int32] REGION Z
  * [Chunk[]] chunks
@@ -25,7 +26,7 @@ import java.util.SortedMap;
  *
  * Chunk:
  * [int16] POS IN REGION (ZZZZZ_XXXXX)
- * [int32] Amount of Sections
+ * [int16] Amount of Sections
  * [ChunkSection[]] sections
  *
  * ChunkSection:
@@ -42,7 +43,7 @@ public class NLSWriter_V2 implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         _out.close();
     }
 
@@ -59,7 +60,7 @@ public class NLSWriter_V2 implements AutoCloseable {
     public void writeChunk(ChunkLightStorage_V2 cls) throws IOException {
         _out.writeShort(encodePosition(cls.getChunkPosition()));
         final SortedMap<Integer, ChunkSectionNibbleArray> lightData = cls.getLightData();
-        _out.writeInt(lightData.size());
+        _out.writeShort(lightData.size());
 
         for (Entry<Integer, ChunkSectionNibbleArray> entry : lightData.entrySet()) {
             _out.writeByte(entry.getKey());

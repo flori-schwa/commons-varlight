@@ -7,7 +7,6 @@ import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -16,20 +15,13 @@ public class ChunkLightStorage_V2 implements IChunkCustomLightAccess {
 
     private final @NotNull ChunkPosition _chunkPosition;
 
-    private final int _minSectionY;
-
     private SortedMap<Integer, ChunkSectionNibbleArray> _lightData = new TreeMap<>();
 
-    public ChunkLightStorage_V2(ChunkPosition chunkPosition, int minY) {
+    public ChunkLightStorage_V2(ChunkPosition chunkPosition) {
         _chunkPosition = Objects.requireNonNull(chunkPosition);
-        _minSectionY = minY;
     }
 
     private void verifyInBounds(IntPosition position) {
-        if (position.getChunkY() < _minSectionY) {
-            throw PositionOutOfBoundsException.belowWorld(position, _minSectionY);
-        }
-
         if (!position.isContainedInChunk(_chunkPosition)) {
             throw PositionOutOfBoundsException.notInChunk(position, _chunkPosition);
         }
@@ -92,6 +84,6 @@ public class ChunkLightStorage_V2 implements IChunkCustomLightAccess {
     }
 
     private int indexOf(int x, int y, int z) {
-        return (y * 16 + z) * 16 + x;
+        return (y << 8) | (z << 4) | x;
     }
 }

@@ -50,7 +50,7 @@ public class NLSWriter_V1 implements AutoCloseable {
         out.writeShort(cls.getMask());
 
         for (int y = 0; y < 16; y++) {
-            ChunkSectionNibbleArray section = cls.lightData[y];
+            ChunkSectionNibbleArray section = cls.getLightData()[y];
 
             if (section == null) {
                 continue;

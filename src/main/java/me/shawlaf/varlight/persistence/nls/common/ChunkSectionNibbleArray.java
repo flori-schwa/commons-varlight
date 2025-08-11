@@ -19,7 +19,11 @@ public class ChunkSectionNibbleArray extends NibbleArray {
         }
     }
 
+    public ChunkSectionNibbleArray(ChunkSectionNibbleArray copyFrom) {
+        super(copyFrom);
+    }
+
     public boolean isEmpty() {
-        return Arrays.equals(this.array, EMPTY_CHUNK_SECTION);
+        return Arrays.equals(this._array, EMPTY_CHUNK_SECTION);
     }
 }

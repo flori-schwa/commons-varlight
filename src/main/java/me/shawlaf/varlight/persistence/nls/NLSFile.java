@@ -4,10 +4,10 @@ import me.shawlaf.varlight.persistence.IChunkCustomLightAccess;
 import me.shawlaf.varlight.persistence.IRegionCustomLightAccess;
 import me.shawlaf.varlight.persistence.nls.common.NLSConstants;
 import me.shawlaf.varlight.persistence.nls.common.NLSHeader;
-import me.shawlaf.varlight.persistence.nls.common.migrate.NLSMigrators;
-import me.shawlaf.varlight.persistence.nls.implementations.v1.ChunkLightStorage_V1;
-import me.shawlaf.varlight.persistence.nls.implementations.v1.NLSReader_V1;
-import me.shawlaf.varlight.persistence.nls.implementations.v1.NLSWriter_V1;
+import me.shawlaf.varlight.persistence.nls.common.migrate.NLSMigration;
+import me.shawlaf.varlight.persistence.nls.implementations.v2.ChunkLightStorage_V2;
+import me.shawlaf.varlight.persistence.nls.implementations.v2.NLSReader_V2;
+import me.shawlaf.varlight.persistence.nls.implementations.v2.NLSWriter_V2;
 import me.shawlaf.varlight.util.io.FileUtil;
 import me.shawlaf.varlight.util.pos.ChunkPosition;
 import me.shawlaf.varlight.util.pos.IntPosition;
@@ -15,92 +15,77 @@ import me.shawlaf.varlight.util.pos.RegionCoords;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-public class NLSFile implements IRegionCustomLightAccess {
-
-    private static final Logger LOGGER = Logger.getLogger(NLSFile.class.getSimpleName());
+public final class NLSFile implements IRegionCustomLightAccess {
 
     public static String FILE_NAME_FORMAT = "r.%d.%d.nls";
 
-    public final File file;
+    public final File _file;
+    private final boolean _deflate;
 
-    private final int regionX, regionZ;
-    private final boolean deflate;
+    private final int _regionX, _regionZ;
+    private final ChunkLightStorage_V2[] _chunks = new ChunkLightStorage_V2[32 * 32];
 
-    private boolean dirty;
-    private int nonEmptyChunks = 0;
-
-    private final ChunkLightStorage_V1[] chunks = new ChunkLightStorage_V1[32 * 32];
+    private boolean _dirty;
 
     private NLSFile(@NotNull File file, int regionX, int regionZ, boolean deflate) {
-        Objects.requireNonNull(file);
-
         if (file.exists()) {
             throw new IllegalArgumentException("File already exists!");
         }
 
-        this.file = file;
-        this.deflate = deflate;
+        _file = file;
+        _deflate = deflate;
 
-        this.regionX = regionX;
-        this.regionZ = regionZ;
+        _regionX = regionX;
+        _regionZ = regionZ;
     }
 
     private NLSFile(@NotNull File file, boolean deflate) throws IOException {
-        Objects.requireNonNull(file);
-
         if (!file.exists()) {
             throw new IllegalArgumentException("File does not exist");
         }
 
-        this.file = file;
-        this.deflate = deflate;
+        _file = file;
+        _deflate = deflate;
 
         boolean needsMigration = false;
 
         try (InputStream iStream = FileUtil.openStreamInflate(file)) {
             NLSHeader header = NLSHeader.readFromStream(iStream);
 
-            if (header.getVersion() < NLSConstants.CURRENT_VERSION) {
+            if (header.getVersion() < NLSConstants.CURRENT_VERSION_NUM) {
                 needsMigration = true;
-            } else if (header.getVersion() > NLSConstants.CURRENT_VERSION) {
-                throw new IllegalStateException(String.format("Cannot downgrade from future NLS Version %d, current version: %d", header.getVersion(), NLSConstants.CURRENT_VERSION));
+            } else if (header.getVersion() > NLSConstants.CURRENT_VERSION_NUM) {
+                throw new IllegalStateException(String.format("Cannot downgrade from future NLS Version %d, desired version: %d", header.getVersion(), NLSConstants.CURRENT_VERSION_NUM));
             }
         }
 
         if (needsMigration) {
-            NLSMigrators.migrateFileToVersion(NLSConstants.CURRENT_VERSION, file);
+            NLSMigration.migrateFileToVersion(NLSConstants.CURRENT_VERSION_NUM, file);
         }
 
         try (InputStream iStream = FileUtil.openStreamInflate(file)) {
-            try (NLSReader_V1 reader = new NLSReader_V1(iStream)) {
+            try (NLSReader_V2 reader = new NLSReader_V2(iStream)) {
                 // Header already parsed and verified by constructor
 
-                this.regionX = reader.getRegionX();
-                this.regionZ = reader.getRegionZ();
+                _regionX = reader.getRegionX();
+                _regionZ = reader.getRegionZ();
 
-                try {
-                    while (true) {
-                        ChunkLightStorage_V1 cls = reader.readChunk();
+                ChunkLightStorage_V2 chunk;
 
-                        int index = chunkIndex(cls.getChunkPosition());
+                while ((chunk = reader.readChunk()) != null) {
+                    final int index = chunkIndex(chunk.getChunkPosition());
 
-                        if (chunks[index] != null) {
-                            throw new IllegalStateException(String.format("Duplicate Chunk Information for Chunk %s found in File %s", cls.getChunkPosition().toShortString(), file.getAbsolutePath()));
-                        }
-
-                        if (cls.isEmpty()) {
-                            LOGGER.warning(String.format("Not loading Chunk %s because it is empty", cls.getChunkPosition().toShortString()));
-                        } else {
-                            chunks[index] = cls;
-                            ++nonEmptyChunks;
-                        }
+                    if (_chunks[index] != null) {
+                        throw new IllegalStateException(String.format("Duplicate Chunk Information for Chunk %s found in File %s", chunk.getChunkPosition().toShortString(), file.getAbsolutePath()));
                     }
-                } catch (EOFException ignored) {
 
+                    if (chunk.hasData()) {
+                        _chunks[index] = chunk;
+                    }
                 }
             }
         }
@@ -123,7 +108,7 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     public static NLSFile existingFile(@NotNull File file) throws IOException {
-        return new NLSFile(file, true);
+        return existingFile(file, true);
     }
 
     public static NLSFile existingFile(@NotNull File file, boolean deflate) throws IOException {
@@ -131,21 +116,21 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     public RegionCoords getRegionCoords() {
-        return new RegionCoords(regionX, regionZ);
+        return new RegionCoords(_regionX, _regionZ);
     }
 
     public int getRegionX() {
-        return regionX;
+        return _regionX;
     }
 
     public int getRegionZ() {
-        return regionZ;
+        return _regionZ;
     }
 
     @Override
     public int getCustomLuminance(IntPosition position) {
         synchronized (this) {
-            IChunkCustomLightAccess chunk = chunks[chunkIndex(position.toChunkCoords())];
+            IChunkCustomLightAccess chunk = _chunks[chunkIndex(position.toChunkCoords())];
 
             if (chunk == null) {
                 return 0;
@@ -159,10 +144,9 @@ public class NLSFile implements IRegionCustomLightAccess {
     public int setCustomLuminance(IntPosition position, int value) {
         ChunkPosition chunkPosition = position.toChunkCoords();
         int index = chunkIndex(chunkPosition);
-        int ret = 0;
 
         synchronized (this) {
-            ChunkLightStorage_V1 chunk = chunks[index];
+            ChunkLightStorage_V2 chunk = _chunks[index];
 
             if (chunk == null) {
                 // No Data present
@@ -171,18 +155,16 @@ public class NLSFile implements IRegionCustomLightAccess {
                     return 0;
                 }
 
-                chunk = new ChunkLightStorage_V1(chunkPosition);
-
+                chunk = new ChunkLightStorage_V2(chunkPosition);
                 chunk.setCustomLuminance(position, value);
 
                 // The value set is not 0 -> The chunk is not empty, if the value is illegal, an exception will be thrown
 
-                chunks[index] = chunk;
-                ++nonEmptyChunks;
-                dirty = true;
+                _chunks[index] = chunk;
+                _dirty = true;
                 return 0;
             } else {
-                ret = chunk.getCustomLuminance(position);
+                final int ret = chunk.getCustomLuminance(position);
 
                 if (ret == value) {
                     return ret;
@@ -191,10 +173,9 @@ public class NLSFile implements IRegionCustomLightAccess {
                 chunk.setCustomLuminance(position, value);
 
                 if (value == 0 && !chunk.hasData()) { // If the last Light source was removed
-                    chunks[index] = null;
-                    --nonEmptyChunks;
+                    _chunks[index] = null;
                 }
-                dirty = true;
+                _dirty = true;
                 return ret;
             }
         }
@@ -205,7 +186,7 @@ public class NLSFile implements IRegionCustomLightAccess {
         int count = 0;
 
         synchronized (this) {
-            for (IChunkCustomLightAccess chunk : chunks) {
+            for (IChunkCustomLightAccess chunk : _chunks) {
                 if (chunk == null) {
                     continue;
                 }
@@ -220,58 +201,48 @@ public class NLSFile implements IRegionCustomLightAccess {
     }
 
     @Override
+    public boolean hasChunkData(ChunkPosition chunkPosition) {
+        final int chunkIndex = chunkIndex(chunkPosition);
+
+        synchronized (this) {
+            final IChunkCustomLightAccess chunkData = _chunks[chunkIndex];
+
+            if (chunkData == null) {
+                return false;
+            }
+
+            return chunkData.hasData();
+        }
+    }
+
+
+    @Override
     public void clearChunk(ChunkPosition chunkPosition) {
         int index = chunkIndex(chunkPosition);
 
         synchronized (this) {
-            if (chunks[index] == null || !chunks[index].hasData()) {
+            if (_chunks[index] == null || !_chunks[index].hasData()) {
                 return;
             }
 
-            chunks[index] = null;
-            --nonEmptyChunks;
-            dirty = true;
+            _chunks[index] = null;
+            _dirty = true;
         }
-    }
-
-    @Override
-    public int getMask(ChunkPosition chunkPosition) {
-        synchronized (this) {
-            IChunkCustomLightAccess cls = chunks[chunkIndex(chunkPosition)];
-
-            if (cls instanceof ChunkLightStorage_V1 storageV1) {
-                return storageV1.getMask();
-            }
-
-            throw new UnsupportedOperationException("getMask");
-        }
-    }
-
-    @Override
-    public IChunkCustomLightAccess getChunk(ChunkPosition chunkPosition) {
-        return chunks[chunkIndex(chunkPosition)];
-    }
-
-    public boolean saveAndUnload() throws IOException {
-        boolean saved = save();
-        unload();
-
-        return saved;
     }
 
     public boolean save() throws IOException {
         synchronized (this) {
-            if (!dirty) {
+            if (!_dirty) {
                 return false;
             }
 
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                OutputStream oStream = deflate ? new GZIPOutputStream(fos) : fos;
+            try (FileOutputStream fos = new FileOutputStream(_file)) {
+                OutputStream oStream = _deflate ? new GZIPOutputStream(fos) : fos;
 
-                try (NLSWriter_V1 out = new NLSWriter_V1(oStream)) {
-                    out.writeHeader(regionX, regionZ);
+                try (NLSWriter_V2 out = new NLSWriter_V2(oStream)) {
+                    out.writeHeader(_regionX, _regionZ);
 
-                    for (ChunkLightStorage_V1 cls : chunks) {
+                    for (ChunkLightStorage_V2 cls : _chunks) {
                         if (cls == null) {
                             continue;
                         }
@@ -281,7 +252,7 @@ public class NLSFile implements IRegionCustomLightAccess {
                 }
             }
 
-            dirty = false;
+            _dirty = false;
         }
 
         return true;
@@ -289,42 +260,19 @@ public class NLSFile implements IRegionCustomLightAccess {
 
     @Override
     public @NotNull List<ChunkPosition> getAffectedChunks() {
-        List<ChunkPosition> list = new ArrayList<>(nonEmptyChunks);
-        int found = 0;
+        List<ChunkPosition> list = new ArrayList<>();
 
         synchronized (this) {
-            for (ChunkLightStorage_V1 chunk : chunks) {
+            for (IChunkCustomLightAccess chunk : _chunks) {
                 if (chunk == null) {
                     continue;
                 }
 
                 list.add(chunk.getChunkPosition());
-
-                if (++found == nonEmptyChunks) {
-                    break;
-                }
             }
         }
 
         return list;
-    }
-
-    public void unload() {
-        if (dirty) {
-            LOGGER.warning("Unloading dirty NLS File " + file.getName());
-            new Exception().printStackTrace();
-        }
-
-        synchronized (this) {
-            for (int i = 0; i < chunks.length; ++i) {
-                if (chunks[i] == null) {
-                    continue;
-                }
-
-                chunks[i].unload();
-                chunks[i] = null;
-            }
-        }
     }
 
     private int chunkIndex(ChunkPosition chunkPosition) {

@@ -16,7 +16,7 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     private final ChunkPosition chunkPosition;
 
-    final ChunkSectionNibbleArray[] lightData = new ChunkSectionNibbleArray[16];
+    private final ChunkSectionNibbleArray[] lightData = new ChunkSectionNibbleArray[16];
 
     public ChunkLightStorage_V1(ChunkPosition coords) {
         this.chunkPosition = coords;
@@ -101,6 +101,10 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
         }
     }
 
+    public ChunkSectionNibbleArray[] getLightData() {
+        return lightData;
+    }
+
     public int getMask() {
         int mask = 0;
 
@@ -113,10 +117,6 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
         }
 
         return mask;
-    }
-
-    public void unload() {
-        Arrays.fill(lightData, null);
     }
 
     private ChunkSectionNibbleArray getSection(int y) {
@@ -139,13 +139,5 @@ public class ChunkLightStorage_V1 implements IChunkCustomLightAccess {
 
     private int indexOf(int x, int y, int z) {
         return (y << 8) | (z << 4) | x;
-    }
-
-    private IntPosition fromIndex(int sectionY, int index) {
-        int x = chunkPosition.x() * 16 + (index & 0xF);
-        int y = sectionY * 16 + ((index >>> 8) & 0xF);
-        int z = chunkPosition.z() * 16 + ((index >>> 4) & 0xF);
-
-        return new IntPosition(x, y, z);
     }
 }
