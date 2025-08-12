@@ -1,6 +1,8 @@
 package me.shawlaf.varlight.util.pos;
 
 
+import me.shawlaf.varlight.adapter.IWorld;
+
 public record RegionCoords(int x, int z) {
 
     public ChunkPosition getRegionStartChunk() {
@@ -11,12 +13,12 @@ public record RegionCoords(int x, int z) {
         return new ChunkPosition((x * 32) + 31, (z * 32) + 31);
     }
 
-    public IntPosition getRegionStart() {
-        return getRegionStartChunk().getChunkStart();
+    public IntPosition getRegionStart(IWorld world) {
+        return getRegionStartChunk().getChunkStart(world);
     }
 
-    public IntPosition getRegionEnd() {
-        return getRegionEndChunk().getChunkEnd();
+    public IntPosition getRegionEnd(IWorld world) {
+        return getRegionEndChunk().getChunkEnd(world);
     }
 
 }

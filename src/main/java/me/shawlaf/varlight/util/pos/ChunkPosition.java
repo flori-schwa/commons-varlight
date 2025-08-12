@@ -1,5 +1,6 @@
 package me.shawlaf.varlight.util.pos;
 
+import me.shawlaf.varlight.adapter.IWorld;
 import me.shawlaf.varlight.util.*;
 
 public record ChunkPosition(int x, int z) {
@@ -22,44 +23,22 @@ public record ChunkPosition(int x, int z) {
         return MathUtil.modulo(z, 32);
     }
 
-    public int getCornerAX() {
-        return x << 4;
+    public IntPosition getChunkStart(IWorld world) {
+        return getRelative(0, world.getMinHeight(), 0);
     }
 
-    public int getCornerAY() {
-        return 0;
+    public IntPosition getChunkEnd(IWorld world) {
+        return getRelative(15, world.getMaxHeight() - 1, 15);
     }
 
-    public int getCornerAZ() {
-        return z << 4;
-    }
-
-    public int getCornerBX() {
-        return getCornerAX() + 15;
-    }
-
-    public int getCornerBY() {
-        return 255;
-    }
-
-    public int getCornerBZ() {
-        return getCornerAZ() + 15;
-    }
-
-    public IntPosition getChunkStart() {
-        return getRelative(0, 0, 0);
-    }
-
-    public IntPosition getChunkEnd() {
-        return getRelative(15, 255, 15);
-    }
-
-    public IntPosition getRelative(int dx, int dy, int dz) {
+    public IntPosition getRelative(int dx, int y, int dz) {
         Preconditions.assertInRange("dx", dx, 0, 15);
-        Preconditions.assertInRange("dy", dy, 0, 255);
         Preconditions.assertInRange("dz", dz, 0, 15);
 
-        return new IntPosition(this.x * 16 + dx, dy, this.z * 16 + dz);
+        final int x = (x() * 16) + dx;
+        final int z = (z() * 16) + dz;
+
+        return new IntPosition(x, y, z);
     }
 
     public ChunkPosition getRelativeChunk(int dx, int dz) {
